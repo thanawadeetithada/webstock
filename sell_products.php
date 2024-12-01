@@ -39,88 +39,100 @@ foreach ($products as $product) {
     <title>ตารางสินค้า</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        table {
-            width: 100%;
-            margin-top: 20px;
-        }
-        th, td {
-            text-align: center;
-            padding: 10px;
-        }
-        th {
-            background-color: #f8f9fa;
-        }
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-        .search-container {
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            background-color: #C1BBBD;
-        }
-        .search-container input {
-            width: 40%;
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin: 10px;
-        }
-        .search-info {
-            font-size: 14px;
-            color: #333;
-            text-align: right;
-            width: 55%;
-        }
-        .search-info span {
-            display: inline-block;
-            margin-right: 15px;
-        }
-        .footer-row td {
-            display: flex;
-            
-            font-weight: bold;
-        }
-        .footer-row .total-price {
-            color: green;
-        }
-        .footer-row button {
-            margin-left: 10px;
-        }
+    .container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    table {
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    th,td {
+        text-align: center;
+        padding: 10px;
+    }
+
+    th {
+        background-color: #f8f9fa;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+    .search-container {
+        margin-top: 6rem;
+        margin-bottom: 0.1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        background-color: #C1BBBD;
+        width: 100%;
+    }
+    .search-container input {
+        width: 40%;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin: 10px;
+    }
+    .search-info {
+        font-size: 14px;
+        color: #333;
+        text-align: right;
+        width: 55%;
+    }
+
+    .search-info span {
+        display: inline-block;
+        margin-right: 15px;
+    }
+
+    .footer-row td {
+        font-weight: bold;
+    }
+
+    .footer-row .total-price {
+        color: green;
+    }
+
+    .footer-row button {
+        margin-left: 10px;
+    }
     </style>
 </head>
 
 <body>
 
-<div class="container">
-    <h2 class="text-center my-4">ตารางแสดงสินค้า</h2>
-    
-    <div class="search-container">
-        <input type="text" placeholder="ค้นหาสินค้า..." id="search-box">
-        
-        <div class="search-info">
-            <span>วันที่: <?= $current_date ?> </span>
-            <span>เวลา: <?= $current_time ?> </span>
-            <span>ผู้ทำการขาย: <?= $username ?></span>
-        </div>
-    </div>
+    <div class="container">
+        <div class="search-container">
+            <input type="text" placeholder="ค้นหาสินค้า..." id="search-box">
 
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th><input type="checkbox" id="select-all"></th>
-                <th>No.</th>
-                <th>จำนวน</th>
-                <th>ชื่อสินค้า</th>
-                <th>หน่วย</th>
-                <th>ราคา</th>
-            </tr>
-        </thead>
-        <tbody id="product-table-body">
-            <?php
+            <div class="search-info">
+                <span>วันที่: <?= $current_date ?> </span>
+                <span>เวลา: <?= $current_time ?> </span>
+                <span>ผู้ทำการขาย: <?= $username ?></span>
+            </div>
+        </div>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="select-all"></th>
+                    <th>No.</th>
+                    <th>จำนวน</th>
+                    <th>ชื่อสินค้า</th>
+                    <th>หน่วย</th>
+                    <th>ราคา</th>
+                </tr>
+            </thead>
+            <tbody id="product-table-body">
+                <?php
             $no = 1;
             foreach ($products as $index => $product) {
                 echo "<tr>";
@@ -133,24 +145,24 @@ foreach ($products as $product) {
                 echo "</tr>";
             }
             ?>
-        </tbody>
+            </tbody>
 
-        <!-- แถวรวมล่างสุด -->
-        <tfoot>
-            <tr class="footer-row">
-                <td colspan="1"></td>
-                <td colspan="2">รวม <?= $total_items ?> รายการ <?= number_format($total_quantity) ?> ชิ้น</td>
-                <td colspan="2">รวม <?= number_format($total_price, 2) ?> บาท</td>
-                <td colspan="1">
-                    <button class="btn btn-danger" id="delete-selected">ลบรายการ</button>
-                    <button class="btn btn-success">ชำระเงิน</button>
-                </td>
-            </tr>
-        </tfoot>
-    </table>
-</div>
+            <!-- แถวรวมล่างสุด -->
+            <tfoot>
+                <tr class="footer-row">
+                    <td colspan="1"></td>
+                    <td colspan="2">รวม <?= $total_items ?> รายการ <?= number_format($total_quantity) ?> ชิ้น</td>
+                    <td colspan="2">รวม <?= number_format($total_price, 2) ?> บาท</td>
+                    <td>
+                        <button class="btn btn-danger" id="delete-selected">ลบรายการ</button>
+                        <button class="btn btn-success">ชำระเงิน</button>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
 
-<script>
+    <script>
     // เลือกทั้งหมด
     document.getElementById('select-all').addEventListener('change', function() {
         const checkboxes = document.querySelectorAll('.select-item');
@@ -163,7 +175,7 @@ foreach ($products as $product) {
     document.getElementById('delete-selected').addEventListener('click', function() {
         const selectedCheckboxes = document.querySelectorAll('.select-item:checked');
         const rowsToDelete = [];
-        
+
         selectedCheckboxes.forEach(checkbox => {
             const row = checkbox.closest('tr');
             rowsToDelete.push(row);
@@ -189,7 +201,7 @@ foreach ($products as $product) {
             }
         });
     });
-</script>
+    </script>
 
 </body>
 

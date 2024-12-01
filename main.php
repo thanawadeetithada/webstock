@@ -9,12 +9,13 @@ if (!isset($_SESSION['user_id'])) {
 ?>
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>เมนู</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-   </head>
+</head>
 <style>
 * {
     margin: 0;
@@ -27,6 +28,7 @@ body {
     background-color: #9B9AFF;
     color: #333;
 }
+
 .container {
     width: 80%;
     margin: 0 auto;
@@ -64,24 +66,25 @@ main {
     transform: scale(1.05);
     box-shadow: none;
 }
-
 </style>
+
 <body>
 
-<main>
-    <div class="container">        
-        <div class="button-container">
-            <button class="btn">ขายสินค้า</button>
-            <button class="btn">บันทึกข้อมูลสินค้า</button>
-            <button class="btn">คลังสินค้า</button>
-            <button class="btn">ค้นหาสินค้าหมดอายุ</button>
-            <button class="btn">ตัดของเสียจากสต็อก</button>
-            <button class="btn">รายงานสินค้าที่ตัดออกจากสต็อก</button>
-            <button class="btn">สถิติของเสีย</button>
-            <button class="btn">สร้างบาร์โค้ด</button>
+    <main>
+        <div class="container">
+            <div class="button-container">
+                <button class="btn" onclick="window.location.href='sell_products.php';">ขายสินค้า</button>
+                <button class="btn">บันทึกข้อมูลสินค้า</button>
+                <button class="btn">คลังสินค้า</button>
+                <button class="btn">ค้นหาสินค้าหมดอายุ</button>
+                <button class="btn">ตัดของเสียจากสต็อก</button>
+                <button class="btn">รายงานสินค้าที่ตัดออกจากสต็อก</button>
+                <button class="btn">สถิติของเสีย</button>
+                <button class="btn">สร้างบาร์โค้ด</button>
+            </div>
         </div>
-    </div>
-</main>
+    </main>
 
 </body>
+
 </html>
