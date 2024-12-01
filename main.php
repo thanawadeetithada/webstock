@@ -1,0 +1,87 @@
+<?php
+session_start();
+include('include/header.php');
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit;
+}
+?>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เมนู</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+   </head>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #9B9AFF;
+    color: #333;
+}
+.container {
+    width: 80%;
+    margin: 0 auto;
+    text-align: center;
+}
+
+main {
+    padding: 40px 0;
+    display: flex;
+    align-items: center;
+    height: 92vh;
+}
+
+.button-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.btn {
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    background-color: #33FFFF;
+    color: black;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #070707;
+}
+
+.btn:hover {
+    transform: scale(1.05);
+    box-shadow: none;
+}
+
+</style>
+<body>
+
+<main>
+    <div class="container">        
+        <div class="button-container">
+            <button class="btn">ขายสินค้า</button>
+            <button class="btn">บันทึกข้อมูลสินค้า</button>
+            <button class="btn">คลังสินค้า</button>
+            <button class="btn">ค้นหาสินค้าหมดอายุ</button>
+            <button class="btn">ตัดของเสียจากสต็อก</button>
+            <button class="btn">รายงานสินค้าที่ตัดออกจากสต็อก</button>
+            <button class="btn">สถิติของเสีย</button>
+            <button class="btn">สร้างบาร์โค้ด</button>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>
