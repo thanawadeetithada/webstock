@@ -43,6 +43,7 @@ $user_logged_in = isset($_SESSION['username']) ? $_SESSION['username'] : null;
             padding: 0px;
             border: 0px;
             color: white;
+            outline: none !important;
         }
 
         i {

@@ -2,6 +2,11 @@
 session_start();
 include('include/header.php');
 
+if (!isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit;
+}
+
 // ตัวอย่างข้อมูลสินค้า
 $products = [
     ['quantity' => 10, 'name' => 'Product 1', 'unit' => 'ชิ้น', 'price' => 100],
@@ -36,94 +41,77 @@ foreach ($products as $product) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ตารางสินค้า</title>
+    <title>ขายสินค้า</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f9f9f9;
+        margin: 0;
+        padding: 20px;
+    }
+
     .container {
+        max-width: 80%;
+        margin: auto;
+        background: #fff;
+        padding: 2.5rem;
+        border-radius: 8px;
+        box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.1);
+        margin-top: 6.5rem;
+    }
+
+    .search-container {
         display: flex;
-        justify-content: center;
-        align-items: flex-start;
-        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .search-container input {
+        padding: 8px;
+        width: 45%;
+        border: 1px solid #ccc;
+        border-radius: 4px;
     }
 
     table {
         width: 100%;
-        margin-top: 20px;
+        border-collapse: collapse;
     }
 
-    th,td {
+    table th,
+    table td {
         text-align: center;
         padding: 10px;
+        border: 1px solid #ddd;
     }
 
-    th {
-        background-color: #f8f9fa;
+    table th {
+        background-color: #f1f1f1;
     }
 
-    tr:nth-child(even) {
-        background-color: #f2f2f2;
-    }
-    .search-container {
-        margin-top: 6rem;
-        margin-bottom: 0.1rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        background-color: #C1BBBD;
-        width: 100%;
-    }
-    .search-container input {
-        width: 40%;
-        padding: 10px;
-        font-size: 16px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        margin: 10px;
-    }
-    .search-info {
-        font-size: 14px;
-        color: #333;
-        text-align: right;
-        width: 55%;
-    }
-
-    .search-info span {
-        display: inline-block;
-        margin-right: 15px;
-    }
-
-    .footer-row td {
-        font-weight: bold;
-    }
-
-    .footer-row .total-price {
-        color: green;
-    }
-
-    .footer-row button {
-        margin-left: 10px;
+    .search-info span.label {
+            font-weight: bold;
+            padding: 15px;
     }
     </style>
 </head>
 
 <body>
-
     <div class="container">
         <div class="search-container">
-            <input type="text" placeholder="ค้นหาสินค้า..." id="search-box">
-
+            <input type="text" placeholder="ค้นหาสินค้า...">
             <div class="search-info">
-                <span>วันที่: <?= $current_date ?> </span>
-                <span>เวลา: <?= $current_time ?> </span>
-                <span>ผู้ทำการขาย: <?= $username ?></span>
+                <span class="label">วันที่</span> <?= $current_date ?>
+                <span class="label">เวลา</span> <?= $current_time ?>
+                <span class="label">ผู้ทำการขาย</span> <?= $username ?>
             </div>
         </div>
-
-        <table class="table table-bordered">
+        <table>
             <thead>
                 <tr>
-                    <th><input type="checkbox" id="select-all"></th>
+                <th><input type="checkbox" id="select-all"></th>
                     <th>No.</th>
                     <th>จำนวน</th>
                     <th>ชื่อสินค้า</th>
@@ -131,8 +119,8 @@ foreach ($products as $product) {
                     <th>ราคา</th>
                 </tr>
             </thead>
-            <tbody id="product-table-body">
-                <?php
+            <tbody>
+            <?php
             $no = 1;
             foreach ($products as $index => $product) {
                 echo "<tr>";
@@ -146,8 +134,6 @@ foreach ($products as $product) {
             }
             ?>
             </tbody>
-
-            <!-- แถวรวมล่างสุด -->
             <tfoot>
                 <tr class="footer-row">
                     <td colspan="1"></td>
@@ -202,7 +188,7 @@ foreach ($products as $product) {
         });
     });
     </script>
-
+    
 </body>
 
 </html>
