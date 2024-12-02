@@ -127,6 +127,7 @@ foreach ($products as $product) {
             display: flex;
             justify-content: center;
             margin-bottom: 20px;
+            margin-right: 6.5rem;
         }
 
         .print-buttons {
@@ -165,6 +166,18 @@ foreach ($products as $product) {
                 <div class="dropdown-container">
                     <input type="date">
                 </div>
+
+                <div class="dropdown-container">
+                    <label for="productCategory">สถานะ</label>
+                    <select id="productCategory" name="productCategory">
+                        <option value="electronics">กระป๋อง</option>
+                        <option value="furniture">กระปุก</option>
+                        <option value="clothing">ถุง</option>
+                        <option value="books">ลัง</option>
+                        <option value="toys">ซอง</option>
+                    </select>
+                </div>
+
             </div>
         </div>
         <div class="center-button">
@@ -178,10 +191,11 @@ foreach ($products as $product) {
                     <th>ชื่อสินค้า</th>
                     <th>จำนวน</th>
                     <th>หน่วย</th>
-                    <th>ราคา</th>
                     <th>สีสติ๊กเกอร์</th>
+                    <th>ราคา</th>
                     <th>วันหมดอายุ</th>
-                    <th>หมวดหมู่สินค้า</th>
+                    <th>วันตัดสต็อก</th>
+                    <th>สถานะ</th>
                 </tr>
             </thead>
             <tbody>
@@ -192,6 +206,7 @@ foreach ($products as $product) {
                     echo "<td>" . $no++ . "</td>";
                     echo "<td>" . $product['quantity'] . "</td>";
                     echo "<td>" . $product['name'] . "</td>";
+                    echo "<td>" . $product['unit'] . "</td>";
                     echo "<td>" . $product['unit'] . "</td>";
                     echo "<td>" . $product['unit'] . "</td>";
                     echo "<td>" . $product['unit'] . "</td>";
