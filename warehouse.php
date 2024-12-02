@@ -41,7 +41,7 @@ foreach ($products as $product) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ขายสินค้า</title>
+    <title>คลังสินค้า</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
     body {
@@ -85,6 +85,35 @@ foreach ($products as $product) {
         color: #aaa;
     }
 
+    .right-section {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        align-items: flex-end;
+    }
+
+    .dropdown-container {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        font-family: Arial, sans-serif;
+    }
+
+    .dropdown-container label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #003d99;
+    }
+
+    select {
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+        width: 100%;
+        outline: none;
+    }
+
     table {
         width: 100%;
         border-collapse: collapse;
@@ -101,9 +130,9 @@ foreach ($products as $product) {
         background-color: #f1f1f1;
     }
 
-    .search-info span.label {
-            font-weight: bold;
-            padding: 15px;
+    .right-section button {
+        padding-top: 8px;
+        padding-bottom: 7px;
     }
     </style>
 </head>
@@ -111,53 +140,66 @@ foreach ($products as $product) {
 <body>
     <div class="container">
         <div class="search-container">
-            <input type="text" placeholder="ค้นหาสินค้า...">
+            <input type="text" placeholder="ค้นหาชื่อสินค้า/รหัสสินค้า">
             <button>
                 <i class="fa-solid fa-magnifying-glass"></i>
             </button>
-            <div class="search-info">
-                <span class="label">วันที่</span> <?= $current_date ?>
-                <span class="label">เวลา</span> <?= $current_time ?>
-                <span class="label">ผู้ทำการขาย</span> <?= $username ?>
+            <div class="right-section">
+                <div class="dropdown-container">
+                    <label for="productCategory">หมวดหมู่สินค้า</label>
+                    <select id="productCategory" name="productCategory">
+                        <option value="electronics">อิเล็กทรอนิกส์</option>
+                        <option value="furniture">เฟอร์นิเจอร์</option>
+                        <option value="clothing">เสื้อผ้า</option>
+                        <option value="books">หนังสือ</option>
+                        <option value="toys">ของเล่น</option>
+                    </select>
+                </div>
+
+                <div class="dropdown-container">
+                    <label for="productCategory">หน่วย</label>
+                    <select id="productCategory" name="productCategory">
+                        <option value="electronics">กระป๋อง</option>
+                        <option value="furniture">กระปุก</option>
+                        <option value="clothing">ถุง</option>
+                        <option value="books">ลัง</option>
+                        <option value="toys">ซอง</option>
+                    </select>
+                </div>
+
+                <button type="button" class="btn btn-outline-danger">All ดูสินค้าทั้งหมดในสต็อกทิ้งหมด</button>
             </div>
         </div>
         <table>
             <thead>
                 <tr>
-                <th><input type="checkbox" id="select-all"></th>
-                    <th>No.</th>
-                    <th>จำนวน</th>
+                    <th>ลำดับ</th>
+                    <th>รหัสสินค้า</th>
                     <th>ชื่อสินค้า</th>
+                    <th>จำนวน</th>
                     <th>หน่วย</th>
-                    <th>ราคา</th>
+                    <th>สีสติ๊กเกอร์</th>
+                    <th>วันหมดอายุ</th>
+                    <th>หมวดหมู่สินค้า</th>
                 </tr>
             </thead>
             <tbody>
-            <?php
+                <?php
             $no = 1;
             foreach ($products as $index => $product) {
                 echo "<tr>";
-                echo "<td><input type='checkbox' class='select-item' data-index='$index'></td>";
                 echo "<td>" . $no++ . "</td>";
                 echo "<td>" . $product['quantity'] . "</td>";
                 echo "<td>" . $product['name'] . "</td>";
                 echo "<td>" . $product['unit'] . "</td>";
-                echo "<td>" . number_format($product['price'], 2) . " บาท</td>";
+                echo "<td>" . $product['unit'] . "</td>";
+                echo "<td>" . $product['unit'] . "</td>";
+                echo "<td>" . $product['unit'] . "</td>";
+                echo "<td>" . $product['unit'] . "</td>";
                 echo "</tr>";
             }
             ?>
             </tbody>
-            <tfoot>
-                <tr class="footer-row">
-                    <td colspan="1"></td>
-                    <td colspan="2">รวม <?= $total_items ?> รายการ <?= number_format($total_quantity) ?> ชิ้น</td>
-                    <td colspan="2">รวม <?= number_format($total_price, 2) ?> บาท</td>
-                    <td>
-                        <button class="btn btn-danger" id="delete-selected">ลบรายการ</button>
-                        <button class="btn btn-success">ชำระเงิน</button>
-                    </td>
-                </tr>
-            </tfoot>
         </table>
     </div>
 
@@ -201,7 +243,7 @@ foreach ($products as $product) {
         });
     });
     </script>
-    
+
 </body>
 
 </html>
