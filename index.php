@@ -260,7 +260,7 @@ if (isset($_POST['register'])) {
             </div>
             <h2 class="login-text mb-3">ลงชื่อเข้าใช้</h2>
             <?php if (isset($error)): ?>
-                <div class="alert alert-danger text-center"><?php echo htmlspecialchars($error); ?></div>
+            <div class="alert alert-danger text-center"><?php echo htmlspecialchars($error); ?></div>
             <?php endif; ?>
             <form action="#" method="POST">
                 <div class="form-group">
@@ -273,8 +273,8 @@ if (isset($_POST['register'])) {
                 <div class="form-group">
                     <div class="input-icon">
                         <i class="fas fa-lock"></i>
-                        <input type="password" class="form-control rounded-pill" id="password" name="password" placeholder="รหัสผ่าน" 
-                        required>
+                        <input type="password" class="form-control rounded-pill" id="password" name="password"
+                            placeholder="รหัสผ่าน" required>
                     </div>
                 </div>
                 <p class="forgot-password-link">
@@ -390,6 +390,12 @@ if (isset($_POST['register'])) {
             $(this).find('#surname').val('');
             $(this).find('#email').val('');
             $(this).find('#phone').val('');
+        });
+    });
+
+    $(document).ready(function() {
+        $('#forgotPasswordModal').on('show.bs.modal', function(event) {
+            $(this).find('input[name="email"]').val('');
         });
     });
     </script>
