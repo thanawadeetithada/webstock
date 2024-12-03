@@ -74,13 +74,13 @@ main {
         <div class="container">
             <div class="button-container">
                 <button class="btn" onclick="window.location.href='sell_products.php';">ขายสินค้า</button>
-                <button class="btn">บันทึกข้อมูลสินค้า</button>
-                <button class="btn">คลังสินค้า</button>
-                <button class="btn">ค้นหาสินค้าหมดอายุ</button>
-                <button class="btn">ตัดของเสียจากสต็อก</button>
-                <button class="btn">รายงานสินค้าที่ตัดออกจากสต็อก</button>
-                <button class="btn">สถิติของเสีย</button>
-                <button class="btn">สร้างบาร์โค้ด</button>
+                <button class="btn" onclick="window.location.href='record_products.php';">บันทึกข้อมูลสินค้า</button>
+                <button class="btn" onclick="window.location.href='warehouse.php';">คลังสินค้า</button>
+                <button class="btn" onclick="window.location.href='product_expired.php';">ค้นหาสินค้าหมดอายุ</button>
+                <button class="btn" onclick="window.location.href='waste_stock.php';">ตัดของเสียจากสต็อก</button>
+                <button class="btn" onclick="window.location.href='report_stock.php';">รายงานสินค้าที่ตัดออกจากสต็อก</button>
+                <button class="btn" onclick="window.location.href='waste_chart.php';">สถิติของเสีย</button>
+                <button class="btn" onclick="window.location.href='generate_QR.php';">สร้างบาร์โค้ด</button>
             </div>
         </div>
     </main>

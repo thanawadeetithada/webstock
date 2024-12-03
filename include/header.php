@@ -123,14 +123,15 @@ $user_logged_in = isset($_SESSION['username']) ? $_SESSION['username'] : null;
     </header>
 
     <div id="sidebar" class="sidebar">
+        <a href="main.php">หน้าหลัก</a>
         <a href="sell_products.php">ขายสินค้า</a>
-        <a href="#">บันทึกข้อมูลสินค้า</a>
-        <a href="#">คลังสินค้า</a>
-        <a href="#">ค้นหาสินค้าหมดอายุ</a>
-        <a href="#">ตัดของเสียจากสต็อก</a>
-        <a href="#">รายงานสินค้าที่ตัดออกจากสต็อก</a>
-        <a href="#">สถิติของเสีย</a>
-        <a href="#">สร้างบาร์โค้ด</a>
+        <a href="record_products.php">บันทึกข้อมูลสินค้า</a>
+        <a href="warehouse.php">คลังสินค้า</a>
+        <a href="product_expired.php">ค้นหาสินค้าหมดอายุ</a>
+        <a href="waste_stock.php">ตัดของเสียจากสต็อก</a>
+        <a href="report_stock.php">รายงานสินค้าที่ตัดออกจากสต็อก</a>
+        <a href="waste_chart.php">สถิติของเสีย</a>
+        <a href="generate_QR.php">สร้างบาร์โค้ด</a>
     </div>
 
     <script>
