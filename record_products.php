@@ -259,7 +259,7 @@ $category
     }
 
     #check-before {
-        padding: 20px;
+        padding: 1.5rem 1.5rem 0rem 8rem;
     }
 
     #check-before div {
@@ -477,6 +477,83 @@ $category
 </body>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+
+    function checkFormValidity() {
+        const inputs = document.querySelectorAll('.form-container input');
+        const selects = document.querySelectorAll('.form-container select');
+        let formValid = true;
+
+        inputs.forEach(input => {
+            if (input.value.trim() === '') {
+                formValid = false;
+            }
+        });
+
+        selects.forEach(select => {
+            if (select.selectedIndex === 0 || select.value === '') {
+                formValid = false;
+            }
+        });
+
+        const saveButton = document.getElementById('saveButton');
+        if (formValid) {
+            saveButton.disabled = false;
+        } else {
+            saveButton.disabled = true;
+        }
+    }
+
+    const formInputs = document.querySelectorAll('.form-container input');
+    const formSelects = document.querySelectorAll('.form-container select');
+
+    formInputs.forEach(input => input.addEventListener('input', checkFormValidity));
+    formSelects.forEach(select => select.addEventListener('change', checkFormValidity));
+
+
+    document.querySelector('.btn.btn-danger').addEventListener('click', function() {
+        document.getElementById('checkContainer').classList.add('d-none');
+        document.querySelector('.form-container').style.display = 'flex';
+        const inputs = document.querySelectorAll('.form-container input');
+        const selects = document.querySelectorAll('.form-container select');
+
+        inputs.forEach(input => {
+            input.value = '';
+        });
+
+        selects.forEach(select => {
+            select.selectedIndex = 0;
+        });
+
+        const checkElements = document.querySelectorAll('[id^="check_"]');
+        checkElements.forEach(element => {
+            element.innerText = '';
+        });
+        document.getElementById('saveButton').disabled = true;
+    });
+
+    document.querySelector('.btn.btn-warning').addEventListener('click', function() {
+        document.getElementById('checkContainer').classList.add('d-none');
+        document.querySelector('.form-container').style.display = 'flex';
+        const checkElements = document.querySelectorAll('[id^="check_"]');
+        checkElements.forEach(element => {
+            element.innerText = '';
+        });
+        document.getElementById('saveButton').disabled = false;
+    });
+
+
+    document.querySelector('.btn.btn-secondary').addEventListener('click', function() {
+        const inputs = document.querySelectorAll('.form-container input');
+        const selects = document.querySelectorAll('.form-container select');
+        inputs.forEach(input => input.value = '');
+        selects.forEach(select => select.selectedIndex = 0);
+        document.getElementById('saveButton').disabled = true;
+        const checkElements = document.querySelectorAll('[id^="check_"]');
+        checkElements.forEach(element => element.innerText = '');
+        document.getElementById('checkContainer').classList.add('d-none');
+
+    });
+
     document.getElementById('saveButton').addEventListener('click', function() {
         var productCode = document.getElementById('product_code').value;
         var productName = document.getElementById('product_name').value;
@@ -515,7 +592,10 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('check_unit_price').innerText = unitPrice;
         document.getElementById('check_category').innerText = category;
         document.getElementById('checkContainer').classList.remove('d-none');
+
+        document.querySelector('.form-container').style.display = 'none';
     });
+    checkFormValidity();
 });
 
 document.getElementById('confirmSave').addEventListener('click', function() {
