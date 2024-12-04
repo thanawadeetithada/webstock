@@ -83,6 +83,11 @@ $category
         background-color: #f9f9f9;
         margin: 0;
         padding: 20px;
+        overflow: scroll;
+    }
+
+    ::-webkit-scrollbar {
+        display: none;
     }
 
     .container {
@@ -171,12 +176,12 @@ $category
 
     .form-container {
         background: #cfd8e5;
-        padding: 2rem;
+        padding: 2rem 2rem 1rem 2rem;
         border-radius: 10px;
         margin: 1.5rem 0 3rem 0;
         display: flex;
         flex-wrap: wrap;
-        row-gap: 2rem;
+        row-gap: 0.5rem;
         column-gap: 1rem;
     }
 
@@ -220,12 +225,12 @@ $category
 
     .check-container {
         background: #cfd8e5;
-        padding: 2rem;
+        padding: 2rem 2rem 1rem 2rem;
         border-radius: 10px;
         margin: 1.5rem 0 3rem 0;
         display: flex;
         flex-wrap: wrap;
-        row-gap: 2rem;
+        row-gap: 0.5rem;
         column-gap: 1rem;
     }
 
