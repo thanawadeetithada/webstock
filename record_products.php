@@ -232,10 +232,11 @@ $category
         flex-wrap: wrap;
         row-gap: 0.5rem;
         column-gap: 1rem;
+        justify-content: center;
     }
 
     .check-container .form-row {
-        width: calc(33%);
+        width: calc(33% - 2rem);
         display: flex;
         flex-direction: column;
     }
@@ -264,7 +265,7 @@ $category
     }
 
     #check-before {
-        padding: 1.5rem 1.5rem 0rem 8rem;
+        margin-left: auto;
     }
 
     #check-before div {
@@ -451,6 +452,7 @@ $category
                 <label>หมวดหมู่สินค้า</label>
                 <div id="check_category"></div>
             </div>
+            <div class="form-row" id="check-before"></div>
             <div class="submit-button">
                 <button class="btn btn-success" id="confirmButton">ยืนยันข้อมูลสินค้า</button>
                 <button class="btn btn-warning">แก้ไข</button>
@@ -460,7 +462,7 @@ $category
     </div>
 
     <div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel"
-        aria-hidden="true">
+        aria-hidden="false" aria-modal="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -514,7 +516,6 @@ document.addEventListener('DOMContentLoaded', function() {
     formInputs.forEach(input => input.addEventListener('input', checkFormValidity));
     formSelects.forEach(select => select.addEventListener('change', checkFormValidity));
 
-
     document.querySelector('.btn.btn-danger').addEventListener('click', function() {
         document.getElementById('checkContainer').classList.add('d-none');
         document.querySelector('.form-container').style.display = 'flex';
@@ -546,7 +547,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('saveButton').disabled = false;
     });
 
-
     document.querySelector('.btn.btn-secondary').addEventListener('click', function() {
         const inputs = document.querySelectorAll('.form-container input');
         const selects = document.querySelectorAll('.form-container select');
@@ -565,7 +565,6 @@ document.addEventListener('DOMContentLoaded', function() {
         var modelYear = document.getElementById('model_year').value;
         var productionDate = document.getElementById('production_date').value;
         var shelfLife = document.getElementById('shelf_life').value;
-
         var expiryDate = document.getElementById('expiry_date').value;
         var stickerColor = document.getElementById('sticker_color').value;
         var reminderDate = document.getElementById('reminder_date').value;
@@ -603,13 +602,16 @@ document.addEventListener('DOMContentLoaded', function() {
     checkFormValidity();
 });
 
+document.getElementById('confirmButton').addEventListener('click', function() {
+        $('#confirmModal').modal('show');
+});
+
 document.getElementById('confirmSave').addEventListener('click', function() {
     var productCode = document.getElementById('product_code').value;
     var productName = document.getElementById('product_name').value;
     var modelYear = document.getElementById('model_year').value;
     var productionDate = document.getElementById('production_date').value;
     var shelfLife = document.getElementById('shelf_life').value;
-
     var expiryDate = document.getElementById('expiry_date').value;
     var stickerColor = document.getElementById('sticker_color').value;
     var reminderDate = document.getElementById('reminder_date').value;
