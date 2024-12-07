@@ -1,7 +1,40 @@
 <?php
 session_start();
-include('include/header.php');
+// include('include/header.php');
 include('config.php');
+
+// ตรวจสอบ action ว่าเป็นการดึงข้อมูลหรือไม่
+if (isset($_GET['action']) && $_GET['action'] === 'fetch') {
+    $search = isset($_GET['query']) ? $_GET['query'] : '';
+
+    $sql = "SELECT product_code, product_name, model_year, production_date, shelf_life, expiry_date, sticker_color, reminder_date, received_date, quantity, unit, unit_cost, sender_code, sender_company, recorder, unit_price, category FROM products WHERE product_code LIKE ? OR product_name LIKE ?";
+    $stmt = $conn->prepare($sql);
+
+    if (!$stmt) {
+        echo json_encode(["error" => "SQL error: " . $conn->error]);
+        exit();
+    }
+
+    $search_param = '%' . $search . '%';
+    $stmt->bind_param('ss', $search_param, $search_param);
+
+    if (!$stmt->execute()) {
+        echo json_encode(["error" => "Execution error: " . $stmt->error]);
+        exit();
+    }
+
+    $result = $stmt->get_result();
+
+    $data = [];
+    while ($row = $result->fetch_assoc()) {
+        $data[] = $row;
+    }
+
+    echo json_encode($data);
+    $stmt->close();
+    $conn->close();
+    exit(); // หยุดการทำงานตรงนี้เพื่อไม่ให้โค้ดด้านล่างทำงาน
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     // ดึงข้อมูลจากฟอร์ม
@@ -23,6 +56,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     $unit_price = $_POST['unit_price'];
     $category = $_POST['category'];
 
+    $check_sql = "SELECT * FROM products WHERE product_code = ?";
+    $stmt_check = $conn->prepare($check_sql);
+    $stmt_check->bind_param("s", $product_code);
+    $stmt_check->execute();
+    $result_check = $stmt_check->get_result();
+
+    if ($result_check->num_rows > 0) {
+        // ถ้ามีข้อมูล ให้ทำการ UPDATE
+        $sql = "UPDATE products SET 
+                    product_name = ?, model_year = ?, production_date = ?, shelf_life = ?, 
+                    expiry_date = ?, sticker_color = ?, reminder_date = ?, received_date = ?, 
+                    quantity = ?, unit = ?, unit_cost = ?, sender_code = ?, sender_company = ?, 
+                    recorder = ?, unit_price = ?, category = ?
+                WHERE product_code = ?";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param(
+            "ssssssssisssssdss", 
+            $product_name, $model_year, $production_date, $shelf_life, $expiry_date, 
+            $sticker_color, $reminder_date, $received_date, $quantity, $unit, $unit_cost, 
+            $sender_code, $sender_company, $recorder, $unit_price, $category, $product_code
+        );
+
+        if ($stmt->execute()) {
+            echo "<script>alert('แก้ไขข้อมูลสำเร็จ');</script>";
+        } else {
+            echo "<script>alert('เกิดข้อผิดพลาด: " . $stmt->error . "');</script>";
+        }
+
+        $stmt->close();
+    } else {
    // เตรียมคำสั่ง SQL
 $sql = "INSERT INTO products (
     product_code, product_name, model_year, production_date, shelf_life, 
@@ -34,28 +98,24 @@ $sql = "INSERT INTO products (
 
 // เตรียม statement
 $stmt = $conn->prepare($sql);
-if ($stmt) {
-    // ผูกค่ากับ placeholder
-    $stmt->bind_param(
-        "ssssssssisssssdss", // กำหนดประเภทข้อมูลที่ตรงกับแต่ละคอลัมน์
-        $product_code, $product_name, $model_year, $production_date, $shelf_life,
-        $expiry_date, $sticker_color, $reminder_date, $received_date, $quantity,
-        $unit, $unit_cost, $sender_code, $sender_company, $recorder, $unit_price, $category
-    );
+$stmt->bind_param(
+    "ssssssssisssssdss", 
+    $product_code, $product_name, $model_year, $production_date, $shelf_life,
+    $expiry_date, $sticker_color, $reminder_date, $received_date, $quantity,
+    $unit, $unit_cost, $sender_code, $sender_company, $recorder, $unit_price, $category
+);
 
-    // ดำเนินการคำสั่ง SQL
-    if ($stmt->execute()) {
-        echo "<script>alert('บันทึกข้อมูลสำเร็จ');</script>";
-    } else {
-        echo "<script>alert('เกิดข้อผิดพลาด: " . $stmt->error . "');</script>";
-    }
-
-    // ปิด statement
-    $stmt->close();
+if ($stmt->execute()) {
+    echo "<script>alert('เพิ่มข้อมูลสำเร็จ');</script>";
 } else {
-    echo "<script>alert('เกิดข้อผิดพลาด: ไม่สามารถเตรียมคำสั่งได้');</script>";
+    echo "<script>alert('เกิดข้อผิดพลาด: " . $stmt->error . "');</script>";
 }
 
+$stmt->close();
+}
+
+$stmt_check->close();
+$conn->close();
 }
 ?>
 
@@ -356,12 +416,147 @@ if ($stmt) {
                 <button type="button" class="btn btn-danger" id="cancelButton">ยกเลิก</button>
             </div>
         </form>
+        <!-- Modal สำหรับการค้นหาและเลือกสินค้า -->
+        <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editProductModalLabel">เลือกสินค้าที่ต้องการแก้ไข</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" id="searchProduct" class="form-control mb-3"
+                            placeholder="ค้นหาโดยใช้รหัสสินค้า หรือ ชื่อสินค้า...">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>รหัสสินค้า</th>
+                                    <th>ชื่อสินค้า</th>
+                                    <th>จำนวน</th>
+                                    <th>เลือก</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productTableBody">
 
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 <script>
+$('.edit-button').click(function() {
+    $('#editProductModal').modal('show');
+    $('#productTableBody').empty(); // เคลียร์ข้อมูลในตารางก่อนแสดง Modal
+    $('table').hide();
+    // loadProducts();
+});
+
+$('#searchProduct').on('input', function() {
+    let query = $(this).val().trim();
+
+    if (query === '') {
+        $('table').hide();
+        $('#productTableBody').empty();
+    } else {
+        $('table').show();
+        loadProducts(query);
+    }
+});
+
+function loadProducts(query = '') {
+    $.ajax({
+        url: 'record_products.php',
+        type: 'GET',
+        data: {
+            query: query,
+            action: 'fetch'
+        },
+        success: function(response) {
+            try {
+                let products = JSON.parse(response);
+                let tableBody = $('#productTableBody');
+                tableBody.empty();
+
+                if (products.error) {
+                    alert(products.error);
+                    $('table').hide();
+                    return;
+                }
+
+                if (products.length > 0) {
+                    products.forEach(product => {
+                        tableBody.append(`
+                            <tr>
+                                <td>${product.product_code}</td>
+                                <td>${product.product_name}</td>
+                                <td>${product.quantity}</td>
+                                <td><button class="btn btn-warning edit-product" data-product='${JSON.stringify(product)}'>แก้ไข</button></td>
+                            </tr>
+                        `);
+                    });
+                    $('table').show();
+                } else {
+                    tableBody.append(`
+                        <tr>
+                            <td colspan="4" class="text-center text-danger">ไม่พบรายการ</td>
+                        </tr>
+                    `);
+                    $('table').show();
+                }
+
+                // เพิ่ม Event Listener สำหรับปุ่มเลือก
+                $('.select-product').off('click').on('click', function() {
+                    let product = $(this).data('product');
+                    populateForm(product);
+                    $('#editProductModal').modal('hide');
+                });
+
+            } catch (e) {
+                alert('เกิดข้อผิดพลาดในการแปลงข้อมูล: ' + e.message);
+                $('table').hide();
+            }
+        },
+        error: function(xhr, status, error) {
+            alert('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + error);
+            $('table').hide();
+        }
+    });
+}
+
+function populateForm(product) {
+    $('#product_code').val(product.product_code).prop('readonly', true); // Lock product_code
+    $('#product_name').val(product.product_name);
+    $('#model_year').val(product.model_year || '');
+    $('#production_date').val(product.production_date || '');
+    $('#shelf_life').val(product.shelf_life || '');
+    $('#expiry_date').val(product.expiry_date || '');
+    $('#sticker_color').val(product.sticker_color || '');
+    $('#reminder_date').val(product.reminder_date || '');
+    $('#received_date').val(product.received_date || '');
+    $('#quantity').val(product.quantity);
+    $('#unit').val(product.unit || '');
+    $('#unit_cost').val(product.unit_cost || '');
+    $('#sender_code').val(product.sender_code || '');
+    $('#sender_company').val(product.sender_company || '');
+    $('#recorder').val(product.recorder || '');
+    $('#unit_price').val(product.unit_price || '');
+    $('#category').val(product.category || '');
+}
+
+$(document).on('click', '.edit-product', function() {
+    let product = $(this).data('product');
+    populateForm(product);
+    $('#editProductModal').modal('hide'); // ปิด Modal หลังจากเลือก
+});
+
 $(document).ready(function() {
     $('#saveButton').hide();
     $('#editButton').hide();
