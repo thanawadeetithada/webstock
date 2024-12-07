@@ -1,9 +1,11 @@
 <?php
+ob_start();
 session_start();
-include('include/header.php');
+// include('include/header.php');
 include('config.php');
 
 if (isset($_GET['action']) && $_GET['action'] === 'check_duplicate' && isset($_GET['product_code'])) {
+    header('Content-Type: application/json'); 
     $product_code = $_GET['product_code'];
 
     $check_sql = "SELECT product_code FROM products WHERE product_code = ?";
@@ -12,6 +14,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'check_duplicate' && isset($_G
     $stmt_check->execute();
     $stmt_check->store_result();
 
+    // header('Content-Type: application/json'); // เพิ่ม Header นี้เพื่อบอกว่าเป็น JSON
+    
     if ($stmt_check->num_rows > 0) {
         echo json_encode(['exists' => true]);
     } else {
@@ -784,10 +788,22 @@ function postExcelDataToDatabase(data) {
     }
 
     function checkDuplicate(product_code) {
-        return fetch(`record_products.php?action=check_duplicate&product_code=${encodeURIComponent(product_code)}`)
-            .then(response => response.json())
-            .then(result => result.exists);
-    }
+    return fetch(`record_products.php?action=check_duplicate&product_code=${encodeURIComponent(product_code)}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.text(); // อ่านเป็น text ก่อน
+        })
+        .then(text => {
+            try {
+                return JSON.parse(text).exists;
+            } catch (error) {
+                console.error('Error parsing JSON:', error, 'Response Text:', text);
+                throw error;
+            }
+        });
+}
 
     data.slice(1).forEach((row, index) => {
         let product_code = row[0] || '';
@@ -827,7 +843,7 @@ function postExcelDataToDatabase(data) {
                     })
                     .then(response => response.text())
                     .then(result => {
-                        console.log(`บันทึกสำเร็จ: รหัสสินค้า "${product_code}"`);
+                        alert(`บันทึกสำเร็จ: รหัสสินค้า "${product_code}"`);
                     })
                     .catch(error => {
                         console.error(`เกิดข้อผิดพลาดกับ รหัสสินค้า "${product_code}":`, error);
