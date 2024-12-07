@@ -290,7 +290,7 @@ if ($stmt) {
             </div>
             <div class="form-row">
                 <label for="model_year">รุ่นการผลิต</label>
-                <input type="date" id="model_year" name="model_year" required>
+                <input type="text" id="model_year" name="model_year" required>
             </div>
             <div class="form-row">
                 <label for="production_date">วันผลิต</label>
