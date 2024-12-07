@@ -1,7 +1,27 @@
 <?php
 session_start();
-// include('include/header.php');
+include('include/header.php');
 include('config.php');
+
+if (isset($_GET['action']) && $_GET['action'] === 'check_duplicate' && isset($_GET['product_code'])) {
+    $product_code = $_GET['product_code'];
+
+    $check_sql = "SELECT product_code FROM products WHERE product_code = ?";
+    $stmt_check = $conn->prepare($check_sql);
+    $stmt_check->bind_param("s", $product_code);
+    $stmt_check->execute();
+    $stmt_check->store_result();
+
+    if ($stmt_check->num_rows > 0) {
+        echo json_encode(['exists' => true]);
+    } else {
+        echo json_encode(['exists' => false]);
+    }
+
+    $stmt_check->close();
+    $conn->close();
+    exit();
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
     $product_code = $_POST['product_code'];
@@ -338,12 +358,15 @@ $conn->close();
             <button class="delete-button">
                 <i class="fa-solid fa-trash"></i>ลบข้อมูล
             </button>
-            <button class="add-button">
+            <!-- <button class="add-button">
                 <i class="fa-solid fa-circle-plus"></i>เพิ่ม
-            </button>
+            </button> -->
             <div class="import-button">
-                <button><i class="fa-regular fa-file-excel"></i></button>
-                <button>นำเข้าข้อมูลสินค้า</button>
+                <input type="file" id="uploadExcel" accept=".xlsx, .xls" class="d-none">
+                <button id="uploadButton" class="btn btn-link">
+                    <i class="fa-regular fa-file-excel"></i><br>
+                    นำเข้าข้อมูลสินค้า
+                </button>
             </div>
             <button class="edit-button">
                 <i class="fa-regular fa-pen-to-square"></i>แก้ไขข้อมูล
@@ -493,6 +516,7 @@ $conn->close();
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
 </body>
 <script>
 $('.edit-button').click(function() {
@@ -576,7 +600,7 @@ function loadProducts(query = '', action = 'edit') {
                     $('table').show();
                 }
 
-                $('.select-product').off('click').on('click', function() {
+                $('.edit-product').off('click').on('click', function() {
                     let product = $(this).data('product');
                     populateForm(product);
                     $('#editProductModal').modal('hide');
@@ -644,7 +668,7 @@ $(document).on('click', '.edit-product', function() {
     let product = $(this).data('product');
     populateForm(product);
     $('#editProductModal').modal('hide');
-});
+}); ///คืออะไร
 
 $(document).ready(function() {
     $('#saveButton').hide();
@@ -710,6 +734,108 @@ $(document).ready(function() {
         $('#resetButton').show();
     });
 });
+
+document.getElementById('uploadButton').addEventListener('click', function() {
+    document.getElementById('uploadExcel').click();
+});
+
+document.getElementById('uploadExcel').addEventListener('change', function(event) {
+    let file = event.target.files[0];
+    if (file) {
+        importExcel();
+    } else {
+        alert('กรุณาเลือกไฟล์ Excel');
+    }
+});
+
+function importExcel() {
+    let fileInput = document.getElementById('uploadExcel');
+    let file = fileInput.files[0];
+
+    if (!file) {
+        alert('กรุณาเลือกไฟล์ Excel ก่อน');
+        return;
+    }
+
+    let reader = new FileReader();
+
+    reader.onload = function(event) {
+        let data = new Uint8Array(event.target.result);
+        let workbook = XLSX.read(data, {
+            type: 'array'
+        });
+        let firstSheetName = workbook.SheetNames[0];
+        let worksheet = workbook.Sheets[firstSheetName];
+
+        let jsonData = XLSX.utils.sheet_to_json(worksheet, {
+            header: 1
+        });
+
+        postExcelDataToDatabase(jsonData);
+    };
+
+    reader.readAsArrayBuffer(file);
+}
+
+function postExcelDataToDatabase(data) {
+    if (data.length < 2) {
+        alert('ไฟล์ไม่มีข้อมูลที่สามารถบันทึกได้');
+        return;
+    }
+
+    function checkDuplicate(product_code) {
+        return fetch(`record_products.php?action=check_duplicate&product_code=${encodeURIComponent(product_code)}`)
+            .then(response => response.json())
+            .then(result => result.exists);
+    }
+
+    data.slice(1).forEach((row, index) => {
+        let product_code = row[0] || '';
+
+        if (!product_code) {
+            alert(`แถวที่ ${index + 2} ไม่มี รหัสสินค้า`);
+            return;
+        }
+
+        checkDuplicate(product_code).then(isDuplicate => {
+            if (isDuplicate) {
+                alert(`ข้อมูลซ้ำ: รหัสสินค้า "${product_code}" มีข้อมูลแล้ว`);
+            } else {
+                let formData = new FormData();
+                formData.append('save', 'true');
+                formData.append('product_code', product_code);
+                formData.append('product_name', row[1] || '');
+                formData.append('model_year', row[2] || '');
+                formData.append('production_date', row[3] || '');
+                formData.append('shelf_life', row[4] || '');
+                formData.append('expiry_date', row[5] || '');
+                formData.append('sticker_color', row[6] || '');
+                formData.append('reminder_date', row[7] || '');
+                formData.append('received_date', row[8] || '');
+                formData.append('quantity', row[9] || '');
+                formData.append('unit', row[10] || '');
+                formData.append('unit_cost', row[11] || '');
+                formData.append('sender_code', row[12] || '');
+                formData.append('sender_company', row[13] || '');
+                formData.append('recorder', row[14] || '');
+                formData.append('unit_price', row[15] || '');
+                formData.append('category', row[16] || '');
+
+                fetch('record_products.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.text())
+                    .then(result => {
+                        console.log(`บันทึกสำเร็จ: รหัสสินค้า "${product_code}"`);
+                    })
+                    .catch(error => {
+                        console.error(`เกิดข้อผิดพลาดกับ รหัสสินค้า "${product_code}":`, error);
+                    });
+            }
+        });
+    });
+}
 </script>
 
 </html>
