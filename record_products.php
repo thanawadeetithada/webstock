@@ -3,7 +3,24 @@ session_start();
 // include('include/header.php');
 include('config.php');
 
-// ตรวจสอบ action ว่าเป็นการดึงข้อมูลหรือไม่
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
+    $product_code = $_POST['product_code'];
+
+    $delete_sql = "DELETE FROM products WHERE product_code = ?";
+    $stmt_delete = $conn->prepare($delete_sql);
+    $stmt_delete->bind_param("s", $product_code);
+
+    if ($stmt_delete->execute()) {
+        echo "ลบข้อมูลสำเร็จ";
+    } else {
+        echo "เกิดข้อผิดพลาดในการลบข้อมูล: " . $stmt_delete->error;
+    }
+
+    $stmt_delete->close();
+    $conn->close();
+    exit();
+}
+
 if (isset($_GET['action']) && $_GET['action'] === 'fetch') {
     $search = isset($_GET['query']) ? $_GET['query'] : '';
 
@@ -33,11 +50,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'fetch') {
     echo json_encode($data);
     $stmt->close();
     $conn->close();
-    exit(); // หยุดการทำงานตรงนี้เพื่อไม่ให้โค้ดด้านล่างทำงาน
+    exit();
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
-    // ดึงข้อมูลจากฟอร์ม
     $product_code = $_POST['product_code'];
     $product_name = $_POST['product_name'];
     $model_year = $_POST['model_year'];
@@ -63,7 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     $result_check = $stmt_check->get_result();
 
     if ($result_check->num_rows > 0) {
-        // ถ้ามีข้อมูล ให้ทำการ UPDATE
         $sql = "UPDATE products SET 
                     product_name = ?, model_year = ?, production_date = ?, shelf_life = ?, 
                     expiry_date = ?, sticker_color = ?, reminder_date = ?, received_date = ?, 
@@ -87,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
 
         $stmt->close();
     } else {
-   // เตรียมคำสั่ง SQL
+
 $sql = "INSERT INTO products (
     product_code, product_name, model_year, production_date, shelf_life, 
     expiry_date, sticker_color, reminder_date, received_date, quantity, 
@@ -96,7 +111,6 @@ $sql = "INSERT INTO products (
     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 )";
 
-// เตรียม statement
 $stmt = $conn->prepare($sql);
 $stmt->bind_param(
     "ssssssssisssssdss", 
@@ -117,6 +131,7 @@ $stmt->close();
 $stmt_check->close();
 $conn->close();
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -247,13 +262,9 @@ $conn->close();
         border-radius: 10px;
         margin: 1.5rem 0 3rem 0;
         display: grid;
-        /* ใช้ Grid Layout */
         grid-template-columns: repeat(3, 1fr);
-        /* แบ่งเป็น 3 คอลัมน์ */
         gap: 1rem;
-        /* ช่องว่างระหว่างคอลัมน์และแถว */
         justify-content: center;
-        /* จัดกลางทั้งแนวนอน */
     }
 
     .form-row {
@@ -416,7 +427,7 @@ $conn->close();
                 <button type="button" class="btn btn-danger" id="cancelButton">ยกเลิก</button>
             </div>
         </form>
-        <!-- Modal สำหรับการค้นหาและเลือกสินค้า -->
+
         <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel"
             aria-hidden="true">
             <div class="modal-dialog modal-lg">
@@ -447,6 +458,38 @@ $conn->close();
                 </div>
             </div>
         </div>
+
+        <div class="modal fade" id="deleteProductModal" tabindex="-1" aria-labelledby="deleteProductModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteProductModalLabel">เลือกสินค้าที่ต้องการลบ</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" id="searchDeleteProduct" class="form-control mb-3"
+                            placeholder="ค้นหาโดยใช้รหัสสินค้า หรือ ชื่อสินค้า...">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>รหัสสินค้า</th>
+                                    <th>ชื่อสินค้า</th>
+                                    <th>จำนวน</th>
+                                    <th>ลบ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="deleteProductTableBody">
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -454,9 +497,14 @@ $conn->close();
 <script>
 $('.edit-button').click(function() {
     $('#editProductModal').modal('show');
-    $('#productTableBody').empty(); // เคลียร์ข้อมูลในตารางก่อนแสดง Modal
+    $('#productTableBody').empty();
     $('table').hide();
-    // loadProducts();
+});
+
+$('.delete-button').click(function() {
+    $('#deleteProductModal').modal('show');
+    $('#deleteProductTableBody').empty();
+    $('table').hide();
 });
 
 $('#searchProduct').on('input', function() {
@@ -471,7 +519,19 @@ $('#searchProduct').on('input', function() {
     }
 });
 
-function loadProducts(query = '') {
+$('#searchDeleteProduct').on('input', function() {
+    let query = $(this).val().trim();
+
+    if (query === '') {
+        $('table').hide();
+        $('#deleteProductTableBody').empty();
+    } else {
+        $('table').show();
+        loadProducts(query, 'delete');
+    }
+});
+
+function loadProducts(query = '', action = 'edit') {
     $.ajax({
         url: 'record_products.php',
         type: 'GET',
@@ -482,7 +542,7 @@ function loadProducts(query = '') {
         success: function(response) {
             try {
                 let products = JSON.parse(response);
-                let tableBody = $('#productTableBody');
+                let tableBody = action === 'delete' ? $('#deleteProductTableBody') : $('#productTableBody');
                 tableBody.empty();
 
                 if (products.error) {
@@ -493,12 +553,16 @@ function loadProducts(query = '') {
 
                 if (products.length > 0) {
                     products.forEach(product => {
+                        let buttonHTML = action === 'delete' ?
+                            `<button class="btn btn-danger delete-product" data-product-code="${product.product_code}">ลบ</button>` :
+                            `<button class="btn btn-warning edit-product" data-product='${JSON.stringify(product)}'>แก้ไข</button>`;
+
                         tableBody.append(`
                             <tr>
                                 <td>${product.product_code}</td>
                                 <td>${product.product_name}</td>
                                 <td>${product.quantity}</td>
-                                <td><button class="btn btn-warning edit-product" data-product='${JSON.stringify(product)}'>แก้ไข</button></td>
+                                <td>${buttonHTML}</td>
                             </tr>
                         `);
                     });
@@ -512,11 +576,15 @@ function loadProducts(query = '') {
                     $('table').show();
                 }
 
-                // เพิ่ม Event Listener สำหรับปุ่มเลือก
                 $('.select-product').off('click').on('click', function() {
                     let product = $(this).data('product');
                     populateForm(product);
                     $('#editProductModal').modal('hide');
+                });
+
+                $('.delete-product').off('click').on('click', function() {
+                    let productCode = $(this).data('product-code');
+                    deleteProduct(productCode);
                 });
 
             } catch (e) {
@@ -531,8 +599,29 @@ function loadProducts(query = '') {
     });
 }
 
+function deleteProduct(productCode) {
+    if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบสินค้านี้?')) {
+        $.ajax({
+            url: 'record_products.php',
+            type: 'POST',
+            data: {
+                action: 'delete',
+                product_code: productCode
+            },
+            success: function(response) {
+                alert(response);
+                $('#deleteProductModal').modal('hide');
+                location.reload();
+            },
+            error: function() {
+                alert('เกิดข้อผิดพลาดในการลบข้อมูล');
+            }
+        });
+    }
+}
+
 function populateForm(product) {
-    $('#product_code').val(product.product_code).prop('readonly', true); // Lock product_code
+    $('#product_code').val(product.product_code).prop('readonly', true);
     $('#product_name').val(product.product_name);
     $('#model_year').val(product.model_year || '');
     $('#production_date').val(product.production_date || '');
@@ -554,7 +643,7 @@ function populateForm(product) {
 $(document).on('click', '.edit-product', function() {
     let product = $(this).data('product');
     populateForm(product);
-    $('#editProductModal').modal('hide'); // ปิด Modal หลังจากเลือก
+    $('#editProductModal').modal('hide');
 });
 
 $(document).ready(function() {
