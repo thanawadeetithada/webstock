@@ -1,38 +1,22 @@
 <?php
 session_start();
 include('include/header.php');
+include('config.php');
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
     exit;
 }
 
-// ตัวอย่างข้อมูลสินค้า
-$products = [
-    ['quantity' => 10, 'name' => 'Product 1', 'unit' => 'ชิ้น', 'price' => 100],
-    ['quantity' => 5, 'name' => 'Product 2', 'unit' => 'กล่อง', 'price' => 200],
-    ['quantity' => 20, 'name' => 'Product 3', 'unit' => 'ชิ้น', 'price' => 150],
-    ['quantity' => 15, 'name' => 'Product 4', 'unit' => 'แพ็ค', 'price' => 250]
-];
-
-// กำหนดค่าผู้ทำการขาย (สมมติว่าอยู่ใน session)
 $username = isset($_SESSION['username']) ? $_SESSION['username'] : 'ผู้ใช้';
 
-// ฟังก์ชันสำหรับแยกวันที่และเวลา
-$current_date = date('d/m/Y');  // วันที่
-$current_time = date('H:i:s');  // เวลา
-
-// คำนวณข้อมูลรวม (จำนวนรายการ, จำนวนชิ้น, ราคา)
 $total_items = 0;
 $total_quantity = 0;
 $total_price = 0;
 
-foreach ($products as $product) {
-    $total_items++;
-    $total_quantity += $product['quantity'];
-    $total_price += $product['quantity'] * $product['price'];
-}
 
+$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, category FROM products";
+$result = $conn->query($sql);
 ?>
 
 <!DOCTYPE html>
@@ -184,21 +168,25 @@ foreach ($products as $product) {
                     <th>หมวดหมู่สินค้า</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="product-table-body">
                 <?php
                 $no = 1;
-                foreach ($products as $index => $product) {
-                    echo "<tr>";
-                    echo "<td>" . $no++ . "</td>";
-                    echo "<td>" . $product['quantity'] . "</td>";
-                    echo "<td>" . $product['name'] . "</td>";
-                    echo "<td>" . $product['unit'] . "</td>";
-                    echo "<td>" . $product['unit'] . "</td>";
-                    echo "<td>" . $product['unit'] . "</td>";
-                    echo "<td>" . $product['unit'] . "</td>";
-                    echo "<td>" . $product['unit'] . "</td>";
-                    echo "<td>" . $product['unit'] . "</td>";
-                    echo "</tr>";
+                if ($result->num_rows > 0) {
+                    while($row = $result->fetch_assoc()) {
+                        echo "<tr data-product-code='" . $row['product_code'] . "'>";
+                        echo "<td>" . $no++ . "</td>";
+                        echo "<td>" . $row['product_code'] . "</td>";
+                        echo "<td>" . $row['product_name'] . "</td>";
+                        echo "<td>" . $row['quantity'] . "</td>";
+                        echo "<td>" . $row['unit'] . "</td>";
+                        echo "<td>" . $row['unit_cost'] . "</td>";
+                        echo "<td>" . $row['sticker_color'] . "</td>";
+                        echo "<td>" . $row['expiry_date'] . "</td>";
+                        echo "<td>" . $row['category'] . "</td>";
+                        echo "</tr>";
+                    }
+                } else {
+                    echo "<tr><td colspan='8'>ไม่พบข้อมูลสินค้า</td></tr>";
                 }
                 ?>
             </tbody>
