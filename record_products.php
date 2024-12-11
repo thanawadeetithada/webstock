@@ -932,6 +932,26 @@ function importExcel() {
     reader.readAsArrayBuffer(file);
 }
 
+function formatDateToISO(dateString) {
+    if (!dateString || typeof dateString !== 'string') {
+        console.warn('Invalid date string:', dateString);
+        return null;
+    }
+
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+        let day = parts[0].padStart(2, '0');
+        let month = parts[1].padStart(2, '0');
+        let year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
+
+        return `${year}-${month}-${day}`;
+    }
+
+    console.warn('Invalid date format:', dateString);
+    return null;
+}
+
+
 function postExcelDataToDatabase(data) {
     if (data.length < 2) {
         alert('ไฟล์ไม่มีข้อมูลที่สามารถบันทึกได้');
@@ -944,7 +964,7 @@ function postExcelDataToDatabase(data) {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
-                return response.text(); // อ่านเป็น text ก่อน
+                return response.text();
             })
             .then(text => {
                 try {
@@ -973,12 +993,13 @@ function postExcelDataToDatabase(data) {
                 formData.append('product_code', product_code);
                 formData.append('product_name', row[1] || '');
                 formData.append('model_year', row[2] || '');
-                formData.append('production_date', row[3] || '');
+                formData.append('production_date', row[3] ? formatDateToISO(row[3]) : ''); // วันที่ผลิต
                 formData.append('shelf_life', row[4] || '');
-                formData.append('expiry_date', row[5] || '');
+                formData.append('expiry_date', row[5] ? formatDateToISO(row[5]) : ''); // วันหมดอายุ
                 formData.append('sticker_color', row[6] || '');
-                formData.append('reminder_date', row[7] || '');
-                formData.append('received_date', row[8] || '');
+                formData.append('reminder_date', row[7] ? formatDateToISO(row[7]) :
+                ''); // เตือนล่วงหน้า
+                formData.append('received_date', row[8] ? formatDateToISO(row[8]) : ''); // วันรับเข้า
                 formData.append('quantity', row[9] || '');
                 formData.append('unit', row[10] || '');
                 formData.append('unit_cost', row[11] || '');

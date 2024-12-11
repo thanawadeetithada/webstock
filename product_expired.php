@@ -8,6 +8,40 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+if (isset($_GET['startDate']) && isset($_GET['endDate'])) {
+    include('config.php');
+
+    $startDate = $_GET['startDate'];
+    $endDate = $_GET['endDate'];
+
+    $sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, category 
+            FROM products 
+            WHERE expiry_date BETWEEN ? AND ?";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        http_response_code(500);
+        echo json_encode(["error" => "SQL error: " . $conn->error]);
+        exit();
+    }
+
+    $stmt->bind_param("ss", $startDate, $endDate);
+    if (!$stmt->execute()) {
+        http_response_code(500);
+        echo json_encode(["error" => "Execution error: " . $stmt->error]);
+        exit();
+    }
+
+    $result = $stmt->get_result();
+    $data = [];
+
+    while ($row = $result->fetch_assoc()) {
+        $data[] = $row;
+    }
+
+    echo json_encode($data);
+    exit();
+}
+
 $username = isset($_SESSION['username']) ? $_SESSION['username'] : 'ผู้ใช้';
 
 $total_items = 0;
@@ -29,106 +63,106 @@ $result = $conn->query($sql);
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 20px;
-        }
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f9f9f9;
+        margin: 0;
+        padding: 20px;
+    }
 
-        .container {
-            max-width: 80%;
-            margin: auto;
-            background: #fff;
-            padding: 2.5rem;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.1);
-            margin-top: 6.5rem;
-            position: relative;
-        }
+    .container {
+        max-width: 80%;
+        margin: auto;
+        background: #fff;
+        padding: 2.5rem;
+        border-radius: 8px;
+        box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.1);
+        margin-top: 6.5rem;
+        position: relative;
+    }
 
-        .search-container {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 25px;
-            width: 100%;
-        }
+    .search-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 25px;
+        width: 100%;
+    }
 
-        .center-section {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            align-items: flex-end;
-        }
+    .center-section {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        align-items: flex-end;
+    }
 
-        .dropdown-container {
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            font-family: Arial, sans-serif;
-        }
+    .dropdown-container {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        font-family: Arial, sans-serif;
+    }
 
-        .dropdown-container input {
-            padding: 6px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            flex-shrink: 1;
-            width: -webkit-fill-available;
-        }
+    .dropdown-container input {
+        padding: 6px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        flex-shrink: 1;
+        width: -webkit-fill-available;
+    }
 
-        .dropdown-container label {
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #003d99;
-        }
+    .dropdown-container label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #003d99;
+    }
 
-        select {
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            font-size: 16px;
-            width: 100%;
-            outline: none;
-        }
+    select {
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+        width: 100%;
+        outline: none;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
 
-        table th,
-        table td {
-            text-align: center;
-            padding: 10px;
-            border: 1px solid #ddd;
-        }
+    table th,
+    table td {
+        text-align: center;
+        padding: 10px;
+        border: 1px solid #ddd;
+    }
 
-        table th {
-            background-color: #f1f1f1;
-        }
+    table th {
+        background-color: #f1f1f1;
+    }
 
-        .center-button {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
+    .center-button {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
 
-        .print-buttons {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+    .print-buttons {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
 
-        .print-buttons button {
-            font-size: 14px;
-            border-radius: 5px;
-            color: black;
-            border: none;
-            cursor: pointer;
-        }
+    .print-buttons button {
+        font-size: 14px;
+        border-radius: 5px;
+        color: black;
+        border: none;
+        cursor: pointer;
+    }
     </style>
 </head>
 
@@ -143,16 +177,16 @@ $result = $conn->query($sql);
             <div class="center-section">
                 <div class="dropdown-container">
                     <label for="productCategory">เลือกช่วงวันที่</label>
-                    <input type="date">
+                    <input type="date" id="startDate">
                 </div>
                 <label>ถึง</label>
                 <div class="dropdown-container">
-                    <input type="date">
+                    <input type="date" id="endDate">
                 </div>
             </div>
         </div>
         <div class="center-button">
-            <button type="button" class="btn btn-primary">ค้นหา</button>
+            <button type="button" class="btn btn-primary" id="searchBtn">ค้นหา</button>
         </div>
         <table>
             <thead>
@@ -194,7 +228,35 @@ $result = $conn->query($sql);
     </div>
 
     <script>
+    document.getElementById("searchBtn").addEventListener("click", function() {
+        const startDate = new Date(document.getElementById("startDate").value);
+        const endDate = new Date(document.getElementById("endDate").value);
 
+        if (!startDate || !endDate) {
+            alert("กรุณาเลือกช่วงวันที่ให้ครบถ้วน");
+            return;
+        }
+        const rows = Array.from(document.querySelectorAll("#product-table-body tr"));
+        const filteredRows = rows.filter((row) => {
+            const expiryDate = new Date(row.cells[7].textContent.trim()); // คอลัมน์ "วันหมดอายุ"
+            return expiryDate >= startDate && expiryDate <= endDate;
+        });
+        filteredRows.sort((a, b) => {
+            const dateA = new Date(a.cells[7].textContent.trim());
+            const dateB = new Date(b.cells[7].textContent.trim());
+            return dateA - dateB;
+        });
+        const tableBody = document.getElementById("product-table-body");
+        tableBody.innerHTML = "";
+
+        if (filteredRows.length === 0) {
+            tableBody.innerHTML = "<tr><td colspan='9'>ไม่พบข้อมูลในช่วงวันที่ที่เลือก</td></tr>";
+        } else {
+            filteredRows.forEach((row) => {
+                tableBody.appendChild(row);
+            });
+        }
+    });
     </script>
 
 </body>
