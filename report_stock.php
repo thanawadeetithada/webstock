@@ -1,38 +1,59 @@
 <?php
 session_start();
 include('include/header.php');
+include('config.php');
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
     exit;
 }
 
-// ตัวอย่างข้อมูลสินค้า
-$products = [
-    ['quantity' => 10, 'name' => 'Product 1', 'unit' => 'ชิ้น', 'price' => 100],
-    ['quantity' => 5, 'name' => 'Product 2', 'unit' => 'กล่อง', 'price' => 200],
-    ['quantity' => 20, 'name' => 'Product 3', 'unit' => 'ชิ้น', 'price' => 150],
-    ['quantity' => 15, 'name' => 'Product 4', 'unit' => 'แพ็ค', 'price' => 250]
-];
+if (isset($_GET['startDate']) && isset($_GET['endDate'])) {
+    include('config.php');
 
-// กำหนดค่าผู้ทำการขาย (สมมติว่าอยู่ใน session)
+    $startDate = $_GET['startDate'];
+    $endDate = $_GET['endDate'];
+
+    $sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, category 
+            FROM products 
+            WHERE expiry_date BETWEEN ? AND ?";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        http_response_code(500);
+        echo json_encode(["error" => "SQL error: " . $conn->error]);
+        exit();
+    }
+
+    $stmt->bind_param("ss", $startDate, $endDate);
+    if (!$stmt->execute()) {
+        http_response_code(500);
+        echo json_encode(["error" => "Execution error: " . $stmt->error]);
+        exit();
+    }
+
+    $result = $stmt->get_result();
+    $data = [];
+
+    while ($row = $result->fetch_assoc()) {
+        $data[] = $row;
+    }
+
+    echo json_encode($data);
+    exit();
+}
+
+$sql_status = "SELECT DISTINCT status FROM products";
+$result_status = $conn->query($sql_status);
+
 $username = isset($_SESSION['username']) ? $_SESSION['username'] : 'ผู้ใช้';
 
-// ฟังก์ชันสำหรับแยกวันที่และเวลา
-$current_date = date('d/m/Y');  // วันที่
-$current_time = date('H:i:s');  // เวลา
-
-// คำนวณข้อมูลรวม (จำนวนรายการ, จำนวนชิ้น, ราคา)
 $total_items = 0;
 $total_quantity = 0;
 $total_price = 0;
-
-foreach ($products as $product) {
-    $total_items++;
-    $total_quantity += $product['quantity'];
-    $total_price += $product['quantity'] * $product['price'];
-}
-
+ 
+$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, category FROM products
+ WHERE status = 'out'";
+$result = $conn->query($sql);
 ?>
 
 <!DOCTYPE html>
@@ -45,7 +66,43 @@ foreach ($products as $product) {
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        body {
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+
+        #printHeader,
+        table,
+        table * {
+            visibility: visible;
+        }
+
+        #printHeader {
+            position: absolute;
+            top: 0;
+            left: 0;
+            text-align: center;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        table {
+            position: absolute;
+            top: 100px;
+            left: 0;
+            width: 100%;
+        }
+
+        .print-buttons {
+            display: none;
+        }
+    }
+
+    #printHeader {
+        display: none;
+    }
+
+    body {
             font-family: Arial, sans-serif;
             background-color: #f9f9f9;
             margin: 0;
@@ -146,6 +203,11 @@ foreach ($products as $product) {
             border: none;
             cursor: pointer;
         }
+
+    button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
     </style>
 </head>
 
@@ -160,32 +222,46 @@ foreach ($products as $product) {
             <div class="center-section">
                 <div class="dropdown-container">
                     <label for="productCategory">เลือกช่วงวันที่</label>
-                    <input type="date">
+                    <input type="date" id="startDate">
                 </div>
                 <label>ถึง</label>
                 <div class="dropdown-container">
-                    <input type="date">
+                    <input type="date" id="endDate">
                 </div>
 
                 <div class="dropdown-container">
                     <label for="productCategory">สถานะ</label>
                     <select id="productCategory" name="productCategory">
-                        <option value="electronics">กระป๋อง</option>
-                        <option value="furniture">กระปุก</option>
-                        <option value="clothing">ถุง</option>
-                        <option value="books">ลัง</option>
-                        <option value="toys">ซอง</option>
+                        <option value="">ทั้งหมด</option>
+                        <?php
+                        if ($result_status->num_rows > 0) {
+                            while ($row = $result_status->fetch_assoc()) {
+                                echo "<option value='" . $row['status'] . "'>" . $row['status'] . "</option>";
+                            }
+                        }
+                        ?>
                     </select>
                 </div>
 
             </div>
         </div>
         <div class="center-button">
-            <button type="button" class="btn btn-primary">ค้นหา</button>
+            <button type="button" class="btn btn-primary" id="searchBtn">ค้นหา</button>
         </div>
         <table>
             <thead>
                 <tr>
+                <!-- // <th>ลำดับ</th>
+                   // <th>รหัสสินค้า</th>
+                   // <th>ชื่อสินค้า</th>
+                  //  <th>จำนวน</th>
+                 //   <th>หน่วย</th>
+                    <th>สีสติ๊กเกอร์</th>
+                    <th>ราคา</th>
+                    <th>วันหมดอายุ</th>
+                    <th>วันตัดสต็อก</th>
+                    <th>สถานะ</th> -->
+
                     <th>ลำดับ</th>
                     <th>รหัสสินค้า</th>
                     <th>ชื่อสินค้า</th>
@@ -194,26 +270,28 @@ foreach ($products as $product) {
                     <th>สีสติ๊กเกอร์</th>
                     <th>ราคา</th>
                     <th>วันหมดอายุ</th>
-                    <th>วันตัดสต็อก</th>
-                    <th>สถานะ</th>
+                    <th>หมวดหมู่สินค้า</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="product-table-body">
                 <?php
                 $no = 1;
-                foreach ($products as $index => $product) {
-                    echo "<tr>";
-                    echo "<td>" . $no++ . "</td>";
-                    echo "<td>" . $product['quantity'] . "</td>";
-                    echo "<td>" . $product['name'] . "</td>";
-                    echo "<td>" . $product['unit'] . "</td>";
-                    echo "<td>" . $product['unit'] . "</td>";
-                    echo "<td>" . $product['unit'] . "</td>";
-                    echo "<td>" . $product['unit'] . "</td>";
-                    echo "<td>" . $product['unit'] . "</td>";
-                    echo "<td>" . $product['unit'] . "</td>";
-                    echo "<td>" . $product['unit'] . "</td>";
-                    echo "</tr>";
+                if ($result->num_rows > 0) {
+                    while($row = $result->fetch_assoc()) {
+                        echo "<tr data-product-code='" . $row['product_code'] . "'>";
+                        echo "<td>" . $no++ . "</td>";
+                        echo "<td>" . $row['product_code'] . "</td>";
+                        echo "<td>" . $row['product_name'] . "</td>";
+                        echo "<td>" . $row['quantity'] . "</td>";
+                        echo "<td>" . $row['unit'] . "</td>";
+                        echo "<td>" . $row['sticker_color'] . "</td>";
+                        echo "<td>" . $row['unit_cost'] . "</td>";
+                        echo "<td>" . $row['expiry_date'] . "</td>";
+                        echo "<td>" . $row['category'] . "</td>";
+                        echo "</tr>";
+                    }
+                } else {
+                    echo "<tr><td colspan='8'>ไม่พบข้อมูลสินค้า</td></tr>";
                 }
                 ?>
             </tbody>
@@ -221,7 +299,82 @@ foreach ($products as $product) {
     </div>
 
     <script>
+    document.querySelector(".print-buttons button").addEventListener("click", function() {
+        const startDate = document.getElementById("startDate").value || "ไม่ระบุ";
+        const endDate = document.getElementById("endDate").value || "ไม่ระบุ";
 
+        let existingHeader = document.getElementById("printHeader");
+        if (existingHeader) {
+            existingHeader.remove();
+        }
+
+        let printHeader = document.createElement("div");
+        printHeader.id = "printHeader";
+        printHeader.innerHTML = `<h4>วันที่: ${startDate} - ${endDate}</h4>`;
+
+        let table = document.querySelector("table");
+        table.parentElement.insertBefore(printHeader, table);
+
+        setTimeout(() => {
+            window.print();
+        }, 100);
+    });
+
+    document.getElementById("searchBtn").addEventListener("click", function() {
+        const startDate = new Date(document.getElementById("startDate").value);
+        const endDate = new Date(document.getElementById("endDate").value);
+
+        if (!startDate || !endDate) {
+            alert("กรุณาเลือกช่วงวันที่ให้ครบถ้วน");
+            return;
+        }
+        const rows = Array.from(document.querySelectorAll("#product-table-body tr"));
+        const filteredRows = rows.filter((row) => {
+            const expiryDate = new Date(row.cells[7].textContent.trim()); // คอลัมน์ "วันหมดอายุ"
+            return expiryDate >= startDate && expiryDate <= endDate;
+        });
+        filteredRows.sort((a, b) => {
+            const dateA = new Date(a.cells[7].textContent.trim());
+            const dateB = new Date(b.cells[7].textContent.trim());
+            return dateA - dateB;
+        });
+        const tableBody = document.getElementById("product-table-body");
+        tableBody.innerHTML = "";
+
+        if (filteredRows.length === 0) {
+            tableBody.innerHTML = "<tr><td colspan='9'>ไม่พบข้อมูลในช่วงวันที่ที่เลือก</td></tr>";
+        } else {
+            filteredRows.forEach((row) => {
+                tableBody.appendChild(row);
+            });
+        }
+    });
+
+    function toggleSearchButton() {
+        const startDate = document.getElementById("startDate").value;
+        const endDate = document.getElementById("endDate").value;
+        const searchBtn = document.getElementById("searchBtn");
+
+        if (!startDate || !endDate || new Date(endDate) < new Date(startDate)) {
+            searchBtn.disabled = true;
+        } else {
+            searchBtn.disabled = false;
+        }
+    }
+
+    document.getElementById("startDate").addEventListener("input", toggleSearchButton);
+    document.getElementById("endDate").addEventListener("input", function() {
+        const startDate = new Date(document.getElementById("startDate").value);
+        const endDate = new Date(this.value);
+
+        if (endDate < startDate) {
+            alert("วันที่สิ้นสุดต้องมากกว่าหรือเท่ากับวันที่เริ่มต้น");
+            this.value = "";
+        }
+
+        toggleSearchButton();
+    });
+    toggleSearchButton();
     </script>
 
 </body>

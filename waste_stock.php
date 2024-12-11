@@ -18,7 +18,7 @@ $current_date = date('d/m/Y');
 $current_time = date('H:i:s');
 
 $sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, category FROM products
- WHERE out_of_stock = 0";
+ WHERE status = 'out'";
 $result = $conn->query($sql);
 
 if (isset($_POST['product_code'])) {
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!empty($product_codes)) {
             $placeholders = implode(',', array_fill(0, count($product_codes), '?'));
-            $sql = "UPDATE products SET out_of_stock = 1 WHERE product_code IN ($placeholders)";
+            $sql = "UPDATE products SET status = 'out' WHERE product_code IN ($placeholders)";
             $stmt = $conn->prepare($sql);
 
             if (!$stmt) {
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($stmt->execute()) {
                 http_response_code(200);
-                echo json_encode(['success' => 'อัปเดตสถานะ out_of_stock สำเร็จ']);
+                echo json_encode(['success' => 'อัปเดตสถานะสำเร็จ']);
             } else {
                 http_response_code(500);
                 echo json_encode(['error' => 'เกิดข้อผิดพลาดในการอัปเดตฐานข้อมูล']);
