@@ -163,6 +163,11 @@ $result = $conn->query($sql);
         border: none;
         cursor: pointer;
     }
+
+    button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
     </style>
 </head>
 
@@ -257,6 +262,32 @@ $result = $conn->query($sql);
             });
         }
     });
+
+    function toggleSearchButton() {
+        const startDate = document.getElementById("startDate").value;
+        const endDate = document.getElementById("endDate").value;
+        const searchBtn = document.getElementById("searchBtn");
+
+        if (!startDate || !endDate || new Date(endDate) < new Date(startDate)) {
+            searchBtn.disabled = true;
+        } else {
+            searchBtn.disabled = false;
+        }
+    }
+
+    document.getElementById("startDate").addEventListener("input", toggleSearchButton);
+    document.getElementById("endDate").addEventListener("input", function() {
+        const startDate = new Date(document.getElementById("startDate").value);
+        const endDate = new Date(this.value);
+
+        if (endDate < startDate) {
+            alert("วันที่สิ้นสุดต้องมากกว่าหรือเท่ากับวันที่เริ่มต้น");
+            this.value = "";
+        }
+
+        toggleSearchButton();
+    });
+    toggleSearchButton();
     </script>
 
 </body>
