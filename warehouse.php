@@ -14,7 +14,15 @@ $total_items = 0;
 $total_quantity = 0;
 $total_price = 0;
 
-$sql = "SELECT product_code, product_name, quantity, unit, unit_cost,expiry_date, sticker_color,category FROM products";
+// ดึงข้อมูลหมวดหมู่สินค้าจากฐานข้อมูล
+$sql_category = "SELECT DISTINCT category FROM products";
+$result_category = $conn->query($sql_category);
+
+$sql_unit = "SELECT DISTINCT unit FROM products";
+$result_unit = $conn->query($sql_unit);
+
+
+$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, category FROM products";
 $result = $conn->query($sql);
 ?>
 
@@ -132,11 +140,15 @@ $result = $conn->query($sql);
                     <label for="productCategory">หมวดหมู่สินค้า</label>
                     <select id="productCategory" name="productCategory">
                         <option value="">ทั้งหมด</option>
-                        <option value="electronics">อิเล็กทรอนิกส์</option>
-                        <option value="furniture">เฟอร์นิเจอร์</option>
-                        <option value="clothing">เสื้อผ้า</option>
-                        <option value="books">หนังสือ</option>
-                        <option value="toys">ของเล่น</option>
+                        <?php
+                        if ($result_category->num_rows > 0) {
+                            while ($row = $result_category->fetch_assoc()) {
+                                echo "<option value='" . $row['category'] . "'>" . $row['category'] . "</option>";
+                            }
+                        } else {
+                            echo "<option value=''>ไม่มีหมวดหมู่</option>";
+                        }
+                        ?>
                     </select>
                 </div>
 
@@ -144,11 +156,15 @@ $result = $conn->query($sql);
                     <label for="unit">หน่วย</label>
                     <select id="unit" name="unit">
                         <option value="">ทั้งหมด</option>
-                        <option value="electronics">กระป๋อง</option>
-                        <option value="furniture">กระปุก</option>
-                        <option value="clothing">ถุง</option>
-                        <option value="books">ลัง</option>
-                        <option value="toys">ซอง</option>
+                        <?php
+                        if ($result_unit->num_rows > 0) {
+                            while ($row = $result_unit->fetch_assoc()) {
+                                echo "<option value='" . $row['unit'] . "'>" . $row['unit'] . "</option>";
+                            }
+                        } else {
+                            echo "<option value=''>ไม่มีหน่วย</option>";
+                        }
+                        ?>
                     </select>
                 </div>
 
@@ -199,7 +215,7 @@ $result = $conn->query($sql);
         document.getElementById('search-box').value = '';
         document.getElementById('productCategory').value = '';
         document.getElementById('unit').value = '';
-        const searchQuery = ''; 
+        const searchQuery = '';
         const categoryFilter = '';
         const unitFilter = '';
 
