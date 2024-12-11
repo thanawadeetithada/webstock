@@ -152,7 +152,8 @@ $result = $conn->query($sql);
                     </select>
                 </div>
 
-                <button type="button" class="btn btn-outline-danger">All ดูสินค้าทั้งหมดในสต็อกทิ้งหมด</button>
+                <button type="button" class="btn btn-outline-danger" id="resetButton">All
+                    ดูสินค้าทั้งหมดในสต็อกทิ้งหมด</button>
             </div>
         </div>
 
@@ -194,7 +195,38 @@ $result = $conn->query($sql);
     </div>
 
     <script>
+    document.getElementById('resetButton').addEventListener('click', function() {
+        document.getElementById('search-box').value = '';
+        document.getElementById('productCategory').value = '';
+        document.getElementById('unit').value = '';
+        const searchQuery = ''; 
+        const categoryFilter = '';
+        const unitFilter = '';
 
+        const rows = Array.from(document.querySelectorAll('#product-table-body tr'));
+
+        const filteredRows = rows.filter(row => {
+            const productCode = row.cells[1].textContent.toLowerCase();
+            const productName = row.cells[2].textContent.toLowerCase();
+            const productCategory = row.cells[7].textContent.toLowerCase();
+            const unit = row.cells[4].textContent.toLowerCase();
+
+            return (productCode.includes(searchQuery) || productName.includes(searchQuery)) &&
+                (categoryFilter === '' || productCategory.includes(categoryFilter)) &&
+                (unitFilter === '' || unit.includes(unitFilter));
+        });
+
+        const sortedRows = filteredRows.sort((a, b) => {
+            const codeA = a.cells[1].textContent.toLowerCase();
+            const codeB = b.cells[1].textContent.toLowerCase();
+            return codeA.localeCompare(codeB);
+        });
+
+        const tableBody = document.getElementById('product-table-body');
+        tableBody.innerHTML = '';
+
+        sortedRows.forEach(row => tableBody.appendChild(row));
+    });
     </script>
 
 </body>
