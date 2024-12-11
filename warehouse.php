@@ -21,8 +21,8 @@ $result_category = $conn->query($sql_category);
 $sql_unit = "SELECT DISTINCT unit FROM products";
 $result_unit = $conn->query($sql_unit);
 
-
-$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, category FROM products";
+$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, category 
+        FROM products WHERE out_of_stock = 0";
 $result = $conn->query($sql);
 ?>
 
