@@ -63,6 +63,42 @@ $result = $conn->query($sql);
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+
+        #printHeader,
+        table,
+        table * {
+            visibility: visible;
+        }
+
+        #printHeader {
+            position: absolute;
+            top: 0;
+            left: 0;
+            text-align: center;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        table {
+            position: absolute;
+            top: 100px;
+            left: 0;
+            width: 100%;
+        }
+
+        .print-buttons {
+            display: none;
+        }
+    }
+
+    #printHeader {
+        display: none;
+    }
+
     body {
         font-family: Arial, sans-serif;
         background-color: #f9f9f9;
@@ -233,6 +269,27 @@ $result = $conn->query($sql);
     </div>
 
     <script>
+    document.querySelector(".print-buttons button").addEventListener("click", function() {
+        const startDate = document.getElementById("startDate").value || "ไม่ระบุ";
+        const endDate = document.getElementById("endDate").value || "ไม่ระบุ";
+
+        let existingHeader = document.getElementById("printHeader");
+        if (existingHeader) {
+            existingHeader.remove();
+        }
+
+        let printHeader = document.createElement("div");
+        printHeader.id = "printHeader";
+        printHeader.innerHTML = `<h4>วันที่: ${startDate} - ${endDate}</h4>`;
+
+        let table = document.querySelector("table");
+        table.parentElement.insertBefore(printHeader, table);
+
+        setTimeout(() => {
+            window.print();
+        }, 100);
+    });
+
     document.getElementById("searchBtn").addEventListener("click", function() {
         const startDate = new Date(document.getElementById("startDate").value);
         const endDate = new Date(document.getElementById("endDate").value);
