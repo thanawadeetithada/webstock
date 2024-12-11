@@ -1,38 +1,21 @@
 <?php
 session_start();
 include('include/header.php');
+include('config.php');
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
     exit;
 }
 
-// ตัวอย่างข้อมูลสินค้า
-$products = [
-    ['quantity' => 10, 'name' => 'Product 1', 'unit' => 'ชิ้น', 'price' => 100],
-    ['quantity' => 5, 'name' => 'Product 2', 'unit' => 'กล่อง', 'price' => 200],
-    ['quantity' => 20, 'name' => 'Product 3', 'unit' => 'ชิ้น', 'price' => 150],
-    ['quantity' => 15, 'name' => 'Product 4', 'unit' => 'แพ็ค', 'price' => 250]
-];
-
-// กำหนดค่าผู้ทำการขาย (สมมติว่าอยู่ใน session)
 $username = isset($_SESSION['username']) ? $_SESSION['username'] : 'ผู้ใช้';
 
-// ฟังก์ชันสำหรับแยกวันที่และเวลา
-$current_date = date('d/m/Y');  // วันที่
-$current_time = date('H:i:s');  // เวลา
-
-// คำนวณข้อมูลรวม (จำนวนรายการ, จำนวนชิ้น, ราคา)
 $total_items = 0;
 $total_quantity = 0;
 $total_price = 0;
 
-foreach ($products as $product) {
-    $total_items++;
-    $total_quantity += $product['quantity'];
-    $total_price += $product['quantity'] * $product['price'];
-}
-
+$sql = "SELECT product_code, product_name, quantity, unit, unit_cost,expiry_date, sticker_color,category FROM products";
+$result = $conn->query($sql);
 ?>
 
 <!DOCTYPE html>
@@ -140,7 +123,7 @@ foreach ($products as $product) {
 <body>
     <div class="container">
         <div class="search-container">
-            <input type="text" placeholder="ค้นหาชื่อสินค้า/รหัสสินค้า">
+            <input type="text" id="search-box" placeholder="ค้นหาชื่อสินค้า/รหัสสินค้า">
             <button>
                 <i class="fa-solid fa-magnifying-glass"></i>
             </button>
@@ -148,6 +131,7 @@ foreach ($products as $product) {
                 <div class="dropdown-container">
                     <label for="productCategory">หมวดหมู่สินค้า</label>
                     <select id="productCategory" name="productCategory">
+                        <option value="">ทั้งหมด</option>
                         <option value="electronics">อิเล็กทรอนิกส์</option>
                         <option value="furniture">เฟอร์นิเจอร์</option>
                         <option value="clothing">เสื้อผ้า</option>
@@ -157,8 +141,9 @@ foreach ($products as $product) {
                 </div>
 
                 <div class="dropdown-container">
-                    <label for="productCategory">หน่วย</label>
-                    <select id="productCategory" name="productCategory">
+                    <label for="unit">หน่วย</label>
+                    <select id="unit" name="unit">
+                        <option value="">ทั้งหมด</option>
                         <option value="electronics">กระป๋อง</option>
                         <option value="furniture">กระปุก</option>
                         <option value="clothing">ถุง</option>
@@ -170,6 +155,7 @@ foreach ($products as $product) {
                 <button type="button" class="btn btn-outline-danger">All ดูสินค้าทั้งหมดในสต็อกทิ้งหมด</button>
             </div>
         </div>
+
         <table>
             <thead>
                 <tr>
@@ -183,65 +169,32 @@ foreach ($products as $product) {
                     <th>หมวดหมู่สินค้า</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="product-table-body">
                 <?php
-            $no = 1;
-            foreach ($products as $index => $product) {
-                echo "<tr>";
-                echo "<td>" . $no++ . "</td>";
-                echo "<td>" . $product['quantity'] . "</td>";
-                echo "<td>" . $product['name'] . "</td>";
-                echo "<td>" . $product['unit'] . "</td>";
-                echo "<td>" . $product['unit'] . "</td>";
-                echo "<td>" . $product['unit'] . "</td>";
-                echo "<td>" . $product['unit'] . "</td>";
-                echo "<td>" . $product['unit'] . "</td>";
-                echo "</tr>";
-            }
-            ?>
+                $no = 1;
+                if ($result->num_rows > 0) {
+                    while($row = $result->fetch_assoc()) {
+                        echo "<tr data-product-code='" . $row['product_code'] . "'>";
+                        echo "<td>" . $no++ . "</td>";
+                        echo "<td>" . $row['product_code'] .  "</td>";
+                        echo "<td>" . $row['product_name'] . "</td>";
+                        echo "<td>" . $row['quantity'] . "</td>";
+                        echo "<td>" . $row['unit'] . "</td>";
+                        echo "<td>" . $row['sticker_color'] . "</td>";
+                        echo "<td>" . $row['expiry_date'] . "</td>";
+                        echo "<td>" . $row['category'] . "</td>";
+                        echo "</tr>";
+                    }
+                } else {
+                    echo "<tr><td colspan='8'>ไม่พบข้อมูลสินค้า</td></tr>";
+                }
+                ?>
             </tbody>
         </table>
     </div>
 
     <script>
-    // เลือกทั้งหมด
-    document.getElementById('select-all').addEventListener('change', function() {
-        const checkboxes = document.querySelectorAll('.select-item');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = this.checked;
-        });
-    });
 
-    // ลบรายการที่เลือก
-    document.getElementById('delete-selected').addEventListener('click', function() {
-        const selectedCheckboxes = document.querySelectorAll('.select-item:checked');
-        const rowsToDelete = [];
-
-        selectedCheckboxes.forEach(checkbox => {
-            const row = checkbox.closest('tr');
-            rowsToDelete.push(row);
-        });
-
-        // ลบแถวที่เลือก
-        rowsToDelete.forEach(row => {
-            row.remove();
-        });
-    });
-
-    // การค้นหา
-    document.getElementById('search-box').addEventListener('input', function() {
-        const searchQuery = this.value.toLowerCase();
-        const rows = document.querySelectorAll('#product-table-body tr');
-
-        rows.forEach(row => {
-            const productName = row.cells[3].textContent.toLowerCase();
-            if (productName.includes(searchQuery)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-    });
     </script>
 
 </body>

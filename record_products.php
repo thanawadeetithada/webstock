@@ -1,11 +1,18 @@
 <?php
 ob_start();
 session_start();
-// include('include/header.php');
-include('config.php');
+include 'config.php';
+
+$user_logged_in = isset($_SESSION['username']) ? $_SESSION['username'] : null;
+
+if (isset($_POST['logout'])) {
+    session_destroy();
+    header("Location: index.php");
+    exit();
+}
 
 if (isset($_GET['action']) && $_GET['action'] === 'check_duplicate' && isset($_GET['product_code'])) {
-    header('Content-Type: application/json'); 
+    header('Content-Type: application/json');
     $product_code = $_GET['product_code'];
 
     $check_sql = "SELECT product_code FROM products WHERE product_code = ?";
@@ -14,8 +21,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'check_duplicate' && isset($_G
     $stmt_check->execute();
     $stmt_check->store_result();
 
-    // header('Content-Type: application/json'); // เพิ่ม Header นี้เพื่อบอกว่าเป็น JSON
-    
     if ($stmt_check->num_rows > 0) {
         echo json_encode(['exists' => true]);
     } else {
@@ -103,18 +108,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     $result_check = $stmt_check->get_result();
 
     if ($result_check->num_rows > 0) {
-        $sql = "UPDATE products SET 
-                    product_name = ?, model_year = ?, production_date = ?, shelf_life = ?, 
-                    expiry_date = ?, sticker_color = ?, reminder_date = ?, received_date = ?, 
-                    quantity = ?, unit = ?, unit_cost = ?, sender_code = ?, sender_company = ?, 
+        $sql = "UPDATE products SET
+                    product_name = ?, model_year = ?, production_date = ?, shelf_life = ?,
+                    expiry_date = ?, sticker_color = ?, reminder_date = ?, received_date = ?,
+                    quantity = ?, unit = ?, unit_cost = ?, sender_code = ?, sender_company = ?,
                     recorder = ?, unit_price = ?, category = ?
                 WHERE product_code = ?";
 
         $stmt = $conn->prepare($sql);
         $stmt->bind_param(
-            "ssssssssisssssdss", 
-            $product_name, $model_year, $production_date, $shelf_life, $expiry_date, 
-            $sticker_color, $reminder_date, $received_date, $quantity, $unit, $unit_cost, 
+            "ssssssssisssssdss",
+            $product_name, $model_year, $production_date, $shelf_life, $expiry_date,
+            $sticker_color, $reminder_date, $received_date, $quantity, $unit, $unit_cost,
             $sender_code, $sender_company, $recorder, $unit_price, $category, $product_code
         );
 
@@ -127,33 +132,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
         $stmt->close();
     } else {
 
-$sql = "INSERT INTO products (
-    product_code, product_name, model_year, production_date, shelf_life, 
-    expiry_date, sticker_color, reminder_date, received_date, quantity, 
+        $sql = "INSERT INTO products (
+    product_code, product_name, model_year, production_date, shelf_life,
+    expiry_date, sticker_color, reminder_date, received_date, quantity,
     unit, unit_cost, sender_code, sender_company, recorder, unit_price, category
 ) VALUES (
     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 )";
 
-$stmt = $conn->prepare($sql);
-$stmt->bind_param(
-    "ssssssssisssssdss", 
-    $product_code, $product_name, $model_year, $production_date, $shelf_life,
-    $expiry_date, $sticker_color, $reminder_date, $received_date, $quantity,
-    $unit, $unit_cost, $sender_code, $sender_company, $recorder, $unit_price, $category
-);
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param(
+            "ssssssssisssssdss",
+            $product_code, $product_name, $model_year, $production_date, $shelf_life,
+            $expiry_date, $sticker_color, $reminder_date, $received_date, $quantity,
+            $unit, $unit_cost, $sender_code, $sender_company, $recorder, $unit_price, $category
+        );
 
-if ($stmt->execute()) {
-    echo "<script>alert('เพิ่มข้อมูลสำเร็จ');</script>";
-} else {
-    echo "<script>alert('เกิดข้อผิดพลาด: " . $stmt->error . "');</script>";
-}
+        if ($stmt->execute()) {
+            echo "<script>alert('เพิ่มข้อมูลสำเร็จ');</script>";
+        } else {
+            echo "<script>alert('เกิดข้อผิดพลาด: " . $stmt->error . "');</script>";
+        }
 
-$stmt->close();
-}
+        $stmt->close();
+    }
 
-$stmt_check->close();
-$conn->close();
+    $stmt_check->close();
+    $conn->close();
 }
 
 ?>
@@ -168,6 +173,88 @@ $conn->close();
     <title>บันทึกข้อมูลสินค้า</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
+    .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: #222222;
+        padding: 20px;
+        height: 8vh;
+        width: 100vw;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+    }
+
+    button {
+        background-color: transparent;
+        padding: 0px;
+        border: 0px;
+        color: white;
+        outline: none !important;
+    }
+
+    i {
+        font-size: 1.5rem;
+    }
+
+    span {
+        font-size: larger;
+    }
+
+    .right-section {
+        display: flex;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 8vh;
+        left: -250px;
+        width: 250px;
+        height: 92vh;
+        background-color: #333;
+        color: white;
+        padding-top: 20px;
+        transition: 0.3s;
+        z-index: 9;
+    }
+
+    .sidebar a {
+        display: block;
+        padding: 10px 15px;
+        text-decoration: none;
+        color: white;
+        font-size: 16px;
+        border-bottom: 1px solid #444;
+    }
+
+    .sidebar a:hover {
+        background-color: #BFBBBA;
+        color: #333;
+    }
+
+    .sidebar-btn {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        color: white;
+    }
+
+    .menu-btn {
+        font-size: 1.5rem;
+    }
+
+    .content {
+        transition: margin-left .3s;
+        padding: 20px;
+        height: 92vh;
+        margin-top: 8vh;
+    }
+
+    /* header */
     body {
         font-family: Arial, sans-serif;
         background-color: #f9f9f9;
@@ -356,6 +443,35 @@ $conn->close();
 </head>
 
 <body>
+    <header class="header">
+        <div class="left-section">
+            <button type="button" class="menu-btn" id="menu-toggle">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+        <div class="right-section">
+            <button type="button">
+                <i class="fas fa-user mr-3"></i>
+            </button>
+            <form action="" method="POST">
+                <button type="submit" name="logout">
+                    <i class="fa-solid fa-lock mr-2"></i><span>Log Out</span>
+                </button>
+            </form>
+        </div>
+    </header>
+    <div id="sidebar" class="sidebar">
+        <a href="main.php">หน้าหลัก</a>
+        <a href="sell_products.php">ขายสินค้า</a>
+        <a href="record_products.php">บันทึกข้อมูลสินค้า</a>
+        <a href="warehouse.php">คลังสินค้า</a>
+        <a href="product_expired.php">ค้นหาสินค้าหมดอายุ</a>
+        <a href="waste_stock.php">ตัดของเสียจากสต็อก</a>
+        <a href="report_stock.php">รายงานสินค้าที่ตัดออกจากสต็อก</a>
+        <a href="waste_chart.php">สถิติของเสีย</a>
+        <a href="generate_QR.php">สร้างบาร์โค้ด</a>
+    </div>
+
     <div class="container">
         <h2>ข้อมูลสินค้า</h2>
         <div class="button-group">
@@ -523,6 +639,15 @@ $conn->close();
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
 </body>
 <script>
+document.getElementById("menu-toggle").addEventListener("click", function() {
+    const sidebar = document.getElementById("sidebar");
+    if (sidebar.style.left === "0px") {
+        sidebar.style.left = "-250px";
+    } else {
+        sidebar.style.left = "0";
+    }
+});
+
 $('.edit-button').click(function() {
     $('#editProductModal').modal('show');
     $('#productTableBody').empty();
@@ -638,14 +763,40 @@ function deleteProduct(productCode) {
             },
             success: function(response) {
                 alert(response);
-                $('#deleteProductModal').modal('hide');
-                location.reload();
+                refreshProductTable();
             },
             error: function() {
                 alert('เกิดข้อผิดพลาดในการลบข้อมูล');
             }
         });
     }
+}
+
+function refreshProductTable() {
+    $.ajax({
+        url: 'record_products.php?action=fetch',
+        type: 'GET',
+        success: function(response) {
+            var rows = '';
+            var products = JSON.parse(response);
+
+            $('#deleteProductTableBody').empty();
+            products.forEach(function(product) {
+                rows += '<tr data-product-code="' + product.product_code + '">' +
+                    '<td>' + product.product_code + '</td>' +
+                    '<td>' + product.product_name + '</td>' +
+                    '<td>' + product.quantity + '</td>' +
+                    '<td><button class="btn btn-danger" onclick="deleteProduct(\'' + product
+                    .product_code + '\')">ลบ</button></td>' +
+                    '</tr>';
+            });
+
+            $('#deleteProductTableBody').append(rows);
+        },
+        error: function() {
+            alert('เกิดข้อผิดพลาดในการดึงข้อมูล');
+        }
+    });
 }
 
 function populateForm(product) {
@@ -788,22 +939,22 @@ function postExcelDataToDatabase(data) {
     }
 
     function checkDuplicate(product_code) {
-    return fetch(`record_products.php?action=check_duplicate&product_code=${encodeURIComponent(product_code)}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.text(); // อ่านเป็น text ก่อน
-        })
-        .then(text => {
-            try {
-                return JSON.parse(text).exists;
-            } catch (error) {
-                console.error('Error parsing JSON:', error, 'Response Text:', text);
-                throw error;
-            }
-        });
-}
+        return fetch(`record_products.php?action=check_duplicate&product_code=${encodeURIComponent(product_code)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text(); // อ่านเป็น text ก่อน
+            })
+            .then(text => {
+                try {
+                    return JSON.parse(text).exists;
+                } catch (error) {
+                    console.error('Error parsing JSON:', error, 'Response Text:', text);
+                    throw error;
+                }
+            });
+    }
 
     data.slice(1).forEach((row, index) => {
         let product_code = row[0] || '';
