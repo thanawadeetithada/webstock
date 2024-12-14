@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 if (isset($_GET['action']) && $_GET['action'] === 'fetch') {
     $search = isset($_GET['query']) ? $_GET['query'] : '';
 
-    $sql = "SELECT product_code, product_name, model_year, production_date, shelf_life, expiry_date, sticker_color, reminder_date, received_date, quantity, unit, unit_cost, sender_code, sender_company, recorder, unit_price, category FROM products WHERE product_code LIKE ? OR product_name LIKE ?";
+    $sql = "SELECT product_code, product_name, product_model, production_date, shelf_life, expiry_date, sticker_color, reminder_date, received_date, quantity, unit, unit_cost, sender_code, sender_company, recorder, unit_price, category FROM products WHERE product_code LIKE ? OR product_name LIKE ?";
     $stmt = $conn->prepare($sql);
 
     if (!$stmt) {
@@ -85,7 +85,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'fetch') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     $product_code = $_POST['product_code'];
     $product_name = $_POST['product_name'];
-    $model_year = $_POST['model_year'];
+    $product_model = $_POST['product_model'];
     $production_date = $_POST['production_date'];
     $shelf_life = $_POST['shelf_life'];
     $expiry_date = $_POST['expiry_date'];
@@ -109,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
 
     if ($result_check->num_rows > 0) {
         $sql = "UPDATE products SET
-                    product_name = ?, model_year = ?, production_date = ?, shelf_life = ?,
+                    product_name = ?, product_model = ?, production_date = ?, shelf_life = ?,
                     expiry_date = ?, sticker_color = ?, reminder_date = ?, received_date = ?,
                     quantity = ?, unit = ?, unit_cost = ?, sender_code = ?, sender_company = ?,
                     recorder = ?, unit_price = ?, category = ?
@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
         $stmt = $conn->prepare($sql);
         $stmt->bind_param(
             "ssssssssisssssdss",
-            $product_name, $model_year, $production_date, $shelf_life, $expiry_date,
+            $product_name, $product_model, $production_date, $shelf_life, $expiry_date,
             $sticker_color, $reminder_date, $received_date, $quantity, $unit, $unit_cost,
             $sender_code, $sender_company, $recorder, $unit_price, $category, $product_code
         );
@@ -133,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     } else {
 
         $sql = "INSERT INTO products (
-    product_code, product_name, model_year, production_date, shelf_life,
+    product_code, product_name, product_model, production_date, shelf_life,
     expiry_date, sticker_color, reminder_date, received_date, quantity,
     unit, unit_cost, sender_code, sender_company, recorder, unit_price, category
 ) VALUES (
@@ -143,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
         $stmt = $conn->prepare($sql);
         $stmt->bind_param(
             "ssssssssisssssdss",
-            $product_code, $product_name, $model_year, $production_date, $shelf_life,
+            $product_code, $product_name, $product_model, $production_date, $shelf_life,
             $expiry_date, $sticker_color, $reminder_date, $received_date, $quantity,
             $unit, $unit_cost, $sender_code, $sender_company, $recorder, $unit_price, $category
         );
@@ -503,8 +503,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                 <input type="text" id="product_name" name="product_name" required>
             </div>
             <div class="form-row">
-                <label for="model_year">รุ่นการผลิต</label>
-                <input type="text" id="model_year" name="model_year" required>
+                <label for="product_model">รุ่นการผลิต</label>
+                <input type="text" id="product_model" name="product_model" required>
             </div>
             <div class="form-row">
                 <label for="production_date">วันผลิต</label>
@@ -802,7 +802,7 @@ function refreshProductTable() {
 function populateForm(product) {
     $('#product_code').val(product.product_code).prop('readonly', true);
     $('#product_name').val(product.product_name);
-    $('#model_year').val(product.model_year || '');
+    $('#product_model').val(product.product_model || '');
     $('#production_date').val(product.production_date || '');
     $('#shelf_life').val(product.shelf_life || '');
     $('#expiry_date').val(product.expiry_date || '');
@@ -992,7 +992,7 @@ function postExcelDataToDatabase(data) {
                 formData.append('save', 'true');
                 formData.append('product_code', product_code);
                 formData.append('product_name', row[1] || '');
-                formData.append('model_year', row[2] || '');
+                formData.append('product_model', row[2] || '');
                 formData.append('production_date', row[3] ? formatDateToISO(row[3]) : ''); // วันที่ผลิต
                 formData.append('shelf_life', row[4] || '');
                 formData.append('expiry_date', row[5] ? formatDateToISO(row[5]) : ''); // วันหมดอายุ

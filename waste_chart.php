@@ -1,6 +1,7 @@
 <?php
 session_start();
-include('include/header.php');
+include 'include/header.php';
+include 'config.php';
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
@@ -11,7 +12,6 @@ if (!isset($_SESSION['user_id'])) {
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -76,7 +76,7 @@ if (!isset($_SESSION['user_id'])) {
     .center-section {
         display: flex;
         align-items: flex-end;
-        gap: 60px;
+        gap: 2rem;
     }
 
     .btn.disabled,
@@ -85,7 +85,6 @@ if (!isset($_SESSION['user_id'])) {
     }
     </style>
 </head>
-
 <body>
     <div class="container">
         <div class="search-container">
@@ -93,45 +92,30 @@ if (!isset($_SESSION['user_id'])) {
                 <div class="dropdown-container">
                     <label for="year">ของเสียในแต่ละปี</label>
                     <form>
-                        <?php
-                            $currentYear = date("Y");
-                            $startYear = 2000;
-                            $endYear = $currentYear + 10;
-
-                            echo '<select name="year" id="year">';
-                            for ($year = $startYear; $year <= $endYear; $year++) {
-                                echo '<option value="' . $year . '">' . $year . '</option>';
-                            }
-                                echo '</select>';
-                        ?>
+                    <select>
+                        <option>2023</option>
+                        <option>2024</option>
+                    </select>
                     </form>
                 </div>
 
                 <div class="dropdown-container">
                     <label for="month">ของเสียในแต่ละเดือน</label>
                     <form>
-                        <?php
-                           $months = [
-                            '01' => 'มกราคม', 
-                            '02' => 'กุมภาพันธ์', 
-                            '03' => 'มีนาคม', 
-                            '04' => 'เมษายน', 
-                            '05' => 'พฤษภาคม', 
-                            '06' => 'มิถุนายน', 
-                            '07' => 'กรกฎาคม', 
-                            '08' => 'สิงหาคม', 
-                            '09' => 'กันยายน', 
-                            '10' => 'ตุลาคม', 
-                            '11' => 'พฤศจิกายน', 
-                            '12' => 'ธันวาคม'
-                            ];
-
-                                echo '<select name="month" id="month">';
-                            foreach ($months as $monthNumber => $monthName) {
-                                echo '<option value="' . $monthNumber . '">' . $monthName . '</option>';
-                            }
-                                echo '</select>';
-                        ?>
+                    <select>
+                        <option>มกราคม</option>
+                        <option>กุมภาพันธ์</option>
+                        <option>มีนาคม</option>
+                        <option>เมษายน</option>
+                        <option>พฤษภาคม</option>
+                        <option>มิถุนายน</option>
+                        <option>กรกฎาคม</option>
+                        <option>สิงหาคม</option>
+                        <option>กันยายน</option>
+                        <option>ตุลาคม</option>
+                        <option>พฤศจิกายน</option>
+                        <option>ธันวาคม</option>
+                    </select>
                     </form>
                 </div>
 
@@ -152,9 +136,8 @@ if (!isset($_SESSION['user_id'])) {
 
             </div>
         </div>
-
-        <label>SHOW chart</label>
+        <h3 class="text-center">จำนวนของเสีย</h3>
+        <canvas id="wasteChart" width="400" height="200"></canvas>
     </div>
 </body>
-
 </html>
