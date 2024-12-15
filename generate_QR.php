@@ -41,8 +41,8 @@ $originalWidth = imagesx($barcodeImage);
 $originalHeight = imagesy($barcodeImage);
 
 // เพิ่มขนาดเป็น 2 เท่า
-$newWidth = $originalWidth * 2;
-$newHeight = $originalHeight * 3;
+$newWidth = $originalWidth * 1.5;
+$newHeight = $originalHeight * 2.5;
 
 // สร้างภาพใหม่ที่ขยายขนาดและรองรับความโปร่งใส
 $resizedBarcodeImage = imagecreatetruecolor($newWidth, $newHeight);
@@ -145,7 +145,7 @@ imagedestroy($outerImage);
     <title>สร้างบาร์โค้ด</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-    body {
+   body {
         font-family: Arial, sans-serif;
         background-color: #f9f9f9;
         margin: 0;
@@ -163,27 +163,44 @@ imagedestroy($outerImage);
         position: relative;
     }
 
+    .search-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 25px;
+        gap: 20px;
+        width: 100%;
+    }
+
+    .form-group label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #003d99;
+    }
+
     .center-button {
         display: flex;
         justify-content: center;
-        margin-bottom: 20px;
+        margin-bottom: 2.5rem;
     }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <form method="POST" action="">
+            <form method="POST" action="">
+            <div class="search-container">
             <div class="form-group">
                 <label for="oldProductCode">รหัสสินค้าเดิม</label>
-                <input type="text" class="form-control" id="oldProductCode" name="oldProductCode" required>
+                <input type="text" class="form-control wide-input" id="oldProductCode" name="oldProductCode" required>
             </div>
             <div class="form-group">
                 <label for="expiryDate">วันหมดอายุ</label>
                 <input type="date" class="form-control" id="expiryDate" name="expiryDate" required>
             </div>
+            </div>
+            <div class="center-button">
             <button type="submit" class="btn btn-primary">สร้างบาร์โค้ด</button>
-
+            </div>
             <?php if (!empty($newProductCode) && !empty($barcodeFile)): ?>
                 <div class="text-center mt-4">
                     <h5>รหัสใหม่ของสินค้า: <?php echo htmlspecialchars($newProductCode); ?></h5>
