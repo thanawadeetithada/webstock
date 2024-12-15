@@ -439,6 +439,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     #check-before div {
         margin-left: 15px;
     }
+
+    ul {
+        list-style: none;
+        padding-left: 15px;
+        margin-left: 0;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
     </style>
 </head>
 
@@ -518,9 +526,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                 <label for="expiry_date">วันหมดอายุ</label>
                 <input type="date" id="expiry_date" name="expiry_date" required>
             </div>
-            <div class="form-row">
-                <label for="sticker_color">สีสติ๊กเกอร์</label>
-                <input type="text" id="sticker_color" name="sticker_color" required>
+            <div class="form-row" style="position: relative; display: inline-block;">
+                <label for="sticker_color" style="margin-right: 10px; margin-left: 5%;">สีสติ๊กเกอร์</label>
+                <div style="position: relative; width: 100%;">
+                    <input type="text" id="sticker_color" name="sticker_color" required
+                        style="padding-right: 30px; width: 90%; box-sizing: border-box; margin-left: 5%; margin-right: 10px">
+                    <i class="fa fa-info-circle" id="hint-icon"
+                        style="position: absolute; top: 40%; right: 35px; transform: translateY(-50%); cursor: pointer; color: #666;"></i>
+                </div>
+                <div id="hint-box"
+                    style="display: none; background: #f9f9f9; border: 1px solid #ccc; padding: 10px; border-radius: 5px; position: absolute; left: 60%; max-width: 300px; font-size: 14px;">
+                    <ul style="list-style: none; padding-left: 10px; margin: 0;">
+                        <li><span style="background-color: #E3D200; color: #000;">หมดอายุเดือน 1</span></li>
+                        <li><span style="background-color: #00C4B4; color: #fff;">หมดอายุเดือน 2</span></li>
+                        <li><span style="background-color: #EE700E; color: #fff;">หมดอายุเดือน 3</span></li>
+                        <li><span style="background-color: #EA12B1; color: #fff;">หมดอายุเดือน 4</span></li>
+                        <li><span style="background-color: #C8E9F0; color: #000;">หมดอายุเดือน 5</span></li>
+                        <li><span style="background-color: #02A737; color: #fff;">หมดอายุเดือน 6</span></li>
+                        <li><span style="background-color: #EAEAA2; color: #000;">หมดอายุเดือน 7</span></li>
+                        <li><span style="background-color: #00A1CD; color: #fff;">หมดอายุเดือน 8</span></li>
+                        <li><span style="background-color: #AA7964; color: #fff;">หมดอายุเดือน 9</span></li>
+                        <li><span style="background-color: #F4D3DC; color: #000;">หมดอายุเดือน 10</span></li>
+                        <li><span style="background-color: #B9F4A2; color: #000;">หมดอายุเดือน 11</span></li>
+                        <li><span style="background-color: #FFFFFF; color: #000; border: 1px solid #ccc;">หมดอายุเดือน
+                                12</span></li>
+                        <li><span style="background-color: #999999; color: #fff;">ไม่มีวันหมดอายุ</span></li>
+                    </ul>
+                </div>
             </div>
             <div class="form-row">
                 <label for="reminder_date">เตือนล่วงหน้า</label>
@@ -639,6 +671,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
 </body>
 <script>
+    const hintIcon = document.getElementById('hint-icon');
+    const hintBox = document.getElementById('hint-box');
+
+    // เมื่อคลิกที่ไอคอน ให้แสดงหรือซ่อน Hint Box
+    hintIcon.addEventListener('click', () => {
+        hintBox.style.display = hintBox.style.display === 'none' ? 'block' : 'none';
+    });
+
+    // เมื่อคลิกที่อื่น ให้ซ่อน Hint Box
+    document.addEventListener('click', (event) => {
+        if (!hintBox.contains(event.target) && event.target !== hintIcon) {
+            hintBox.style.display = 'none';
+        }
+    });
+
 document.getElementById("menu-toggle").addEventListener("click", function() {
     const sidebar = document.getElementById("sidebar");
     if (sidebar.style.left === "0px") {
@@ -998,7 +1045,7 @@ function postExcelDataToDatabase(data) {
                 formData.append('expiry_date', row[5] ? formatDateToISO(row[5]) : ''); // วันหมดอายุ
                 formData.append('sticker_color', row[6] || '');
                 formData.append('reminder_date', row[7] ? formatDateToISO(row[7]) :
-                ''); // เตือนล่วงหน้า
+                    ''); // เตือนล่วงหน้า
                 formData.append('received_date', row[8] ? formatDateToISO(row[8]) : ''); // วันรับเข้า
                 formData.append('quantity', row[9] || '');
                 formData.append('unit', row[10] || '');
