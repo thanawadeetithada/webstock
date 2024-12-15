@@ -122,6 +122,18 @@ $result = $conn->query($sql);
         font-weight: bold;
         padding: 15px;
     }
+
+    button {
+        background-color: transparent;
+        padding: 0px;
+        border: 0px;
+        color: white;
+        outline: none !important;
+    }
+
+    ::-webkit-scrollbar {
+        display: none;
+    }
     </style>
 </head>
 
