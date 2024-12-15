@@ -31,33 +31,105 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt->execute();
 
         // สร้างบาร์โค้ด
-        $generator = new BarcodeGeneratorPNG();
-        $barcode = $generator->getBarcode($newProductCode, $generator::TYPE_CODE_128);
+        // สร้างบาร์โค้ด
+$generator = new BarcodeGeneratorPNG();
+$barcode = $generator->getBarcode($newProductCode, $generator::TYPE_CODE_128);
 
-        // สร้างภาพบาร์โค้ดพร้อมพื้นหลังและข้อความ
-        $barcodeImage = imagecreatefromstring($barcode);
-        $width = imagesx($barcodeImage);
-        $height = imagesy($barcodeImage) + 40; // เพิ่มพื้นที่สำหรับข้อความด้านล่าง
+// ขยายขนาดภาพบาร์โค้ดเป็น 2 เท่า
+$barcodeImage = imagecreatefromstring($barcode);
+$originalWidth = imagesx($barcodeImage);
+$originalHeight = imagesy($barcodeImage);
 
-        // สร้างภาพใหม่พร้อมพื้นหลังสีเขียว
-        $image = imagecreatetruecolor($width, $height);
-        $backgroundColor = imagecolorallocate($image, 204, 255, 204); // สีเขียวอ่อน
-        $textColor = imagecolorallocate($image, 0, 0, 0); // สีดำ
+// เพิ่มขนาดเป็น 2 เท่า
+$newWidth = $originalWidth * 2;
+$newHeight = $originalHeight * 3;
 
-        imagefilledrectangle($image, 0, 0, $width, $height, $backgroundColor);
-        imagecopy($image, $barcodeImage, 0, 0, 0, 0, $width, imagesy($barcodeImage));
+// สร้างภาพใหม่ที่ขยายขนาดและรองรับความโปร่งใส
+$resizedBarcodeImage = imagecreatetruecolor($newWidth, $newHeight);
+imagealphablending($resizedBarcodeImage, false);
+imagesavealpha($resizedBarcodeImage, true);
+$transparentColor = imagecolorallocatealpha($resizedBarcodeImage, 255, 255, 255, 127);
+imagefill($resizedBarcodeImage, 0, 0, $transparentColor);
 
-        // เพิ่มข้อความตัวเลขด้านล่างบาร์โค้ด
-        $font = __DIR__ . '/font/THSarabunNew.ttf'; 
-        $fontSize = 18;
-        imagettftext($image, $fontSize, 0, 10, $height - 20, $textColor, $font, $newProductCode);
-        $consumeBeforeText = "ควรบริโภคก่อนวันที่ : " . date('d/m/Y', strtotime($expiryDate));
-        imagettftext($image, $fontSize, 0, 10, $height - 5, $textColor, $font, $consumeBeforeText);
+// ทำการยืดขยายภาพเดิมไปยังภาพใหม่
+imagecopyresampled($resizedBarcodeImage, $barcodeImage, 0, 0, 0, 0, $newWidth, $newHeight, $originalWidth, $originalHeight);
 
-        // บันทึกภาพ
-        $barcodeFile = 'barcodes/' . $newProductCode . '.png';
-        imagepng($image, $barcodeFile);
-        imagedestroy($image);
+// เพิ่มพื้นที่สำหรับข้อความด้านล่าง
+$finalHeight = $newHeight + 40;
+$image = imagecreatetruecolor($newWidth, $finalHeight);
+
+// สร้างสีพื้นหลังสีเขียวอ่อน
+$backgroundColor = imagecolorallocate($image, 204, 255, 204);
+$textColor = imagecolorallocate($image, 0, 0, 0);
+
+// เติมสีพื้นหลัง
+imagefilledrectangle($image, 0, 0, $newWidth, $finalHeight, $backgroundColor);
+
+// วางภาพบาร์โค้ดที่ขยายขนาดลงบนภาพใหม่
+imagecopy($image, $resizedBarcodeImage, 0, 0, 0, 0, $newWidth, $newHeight);
+
+// เพิ่มพื้นหลังใหม่ที่ใหญ่กว่า
+$outerWidth = $newWidth;
+$outerHeight = $finalHeight + 70;
+$outerImage = imagecreatetruecolor($outerWidth, $outerHeight);
+
+// สีพื้นหลังใหม่ (เช่น สีเทา)
+$outerBackgroundColor = imagecolorallocate($outerImage, 255, 255, 255);
+imagefilledrectangle($outerImage, 0, 0, $outerWidth, $outerHeight, $outerBackgroundColor);
+
+// วางภาพ QR code พร้อมพื้นสีเขียวตรงกลาง
+imagecopy($outerImage, $image, 0, 20, 0, 0, $newWidth, $finalHeight);
+
+// เพิ่มข้อความตัวเลขด้านล่างบาร์โค้ด
+// เพิ่มข้อความตัวเลขด้านล่างบาร์โค้ด
+$font = __DIR__ . '/font/THSarabunNew.ttf';
+$boldFont = __DIR__ . '/font/THSarabunNewBold.ttf';
+$fontSize = 18; // ขนาดฟอนต์ปกติ
+$boldFontSize = 25;
+
+// คำนวณความกว้างของพื้นที่บาร์โค้ด
+$barcodeWidth = $newWidth; // ความกว้างของบาร์โค้ดที่ขยาย
+
+// คำนวณจำนวนตัวอักษรทั้งหมดในรหัสสินค้า
+$charCount = strlen($newProductCode);
+
+// คำนวณระยะห่างของแต่ละตัวอักษรให้กระจายเต็มความกว้าง
+$spacePerChar = $barcodeWidth / $charCount;  // ขนาดพื้นที่ที่ใช้สำหรับแต่ละตัวอักษร
+
+// วางข้อความทีละตัวจากซ้ายไปขวา
+$currentX = -30;
+for ($i = 0; $i < $charCount; $i++) {
+    // วางข้อความแต่ละตัว
+    imagettftext($outerImage, $boldFontSize, 0, $currentX + 40, $outerHeight - 60, $textColor, $boldFont, $newProductCode[$i]);
+    
+    // ขยับตำแหน่ง X เพื่อให้ข้อความกระจาย
+    $currentX = round($spacePerChar * $i);  // หรือ intval($spacePerChar * $i)
+
+}
+
+// ข้อความ "ควรบริโภคก่อนวันที่"
+$consumeBeforeText = "ควรบริโภคก่อนวันที่ : " . date('d/m/Y', strtotime($expiryDate));
+
+// คำนวณความกว้างของข้อความ
+$textBoxConsume = imagettfbbox($fontSize, 0, $font, $consumeBeforeText);
+$textWidthConsume = $textBoxConsume[2] - $textBoxConsume[0];
+
+// คำนวณตำแหน่ง x ให้ข้อความอยู่ขวาสุด (เว้นขอบเล็กน้อย 10px)
+$rightX = $outerWidth - $textWidthConsume - 10;
+
+// แสดงข้อความ "ควรบริโภคก่อนวันที่" ที่ขวาสุด
+imagettftext($outerImage, $fontSize, 0, $rightX, $outerHeight - 10, $textColor, $font, $consumeBeforeText);
+
+// บันทึกภาพ
+$barcodeFile = 'barcodes/' . $newProductCode . '.png';
+imagepng($outerImage, $barcodeFile);
+
+// ทำลายภาพเพื่อล้างหน่วยความจำ
+imagedestroy($image);
+imagedestroy($barcodeImage);
+imagedestroy($resizedBarcodeImage);
+imagedestroy($outerImage);
+
     } else {
         $error = "กรุณากรอกข้อมูลให้ครบถ้วน";
     }
@@ -119,7 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
             <?php elseif (!empty($error)): ?>
                 <div class="alert alert-danger mt-4"><?php echo htmlspecialchars($error); ?></div>
-            <?php endif; ?>
+            <?php endif;?>
         </form>
     </div>
 </body>
