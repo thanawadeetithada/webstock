@@ -206,6 +206,10 @@ foreach ($categories as $category) {
         display: inline-block;
         border-radius: 3px;
     }
+
+    ::-webkit-scrollbar {
+        display: none;
+    }
     </style>
 </head>
 
