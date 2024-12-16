@@ -3,6 +3,7 @@ session_start();
 include 'config.php';
 
 header('Content-Type: application/json');
+date_default_timezone_set('Asia/Bangkok');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
@@ -10,12 +11,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($data['products']) && is_array($data['products'])) {
         $products = $data['products'];
 
-        // เตรียมอัปเดตสถานะเป็น 'OUT'
-        $query = $conn->prepare("UPDATE products SET status = 'OUT' WHERE product_code = ?");
+        $current_date = date('Y-m-d');
+
+        $query = $conn->prepare("UPDATE products SET status = 'OUT', out_stock_date = ? WHERE product_code = ?");
         
         $success = true;
         foreach ($products as $product_code) {
-            $query->bind_param("s", $product_code);
+            $query->bind_param("ss", $current_date, $product_code);
             if (!$query->execute()) {
                 $success = false;
                 break;

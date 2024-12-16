@@ -306,46 +306,46 @@ if (isset($_POST['search'])) {
     });
 
     document.getElementById('cut-stock-btn').addEventListener('click', function() {
-    const tbody = document.querySelector('table tbody');
-    const rows = tbody.querySelectorAll('tr');
-    const productsToUpdate = [];
+        const tbody = document.querySelector('table tbody');
+        const rows = tbody.querySelectorAll('tr');
+        const productsToUpdate = [];
 
-    rows.forEach(row => {
-        const productCode = row.cells[5].textContent; // รหัสสินค้า (คอลัมน์ที่ 6 - index 5)
-        productsToUpdate.push(productCode);
+        rows.forEach(row => {
+            const productCode = row.cells[5].textContent; // รหัสสินค้า (คอลัมน์ที่ 6 - index 5)
+            productsToUpdate.push(productCode);
+        });
+
+        if (productsToUpdate.length === 0) {
+            alert('ไม่มีสินค้าที่จะตัดสต็อก');
+            return;
+        }
+
+        // แสดง Alert เพื่อยืนยันการตัดสต็อก
+        if (confirm('คุณต้องการตัดสต็อกสินค้าทั้งหมดนี้ใช่หรือไม่?')) {
+            // ส่งข้อมูลไปยังเซิร์ฟเวอร์ผ่าน fetch
+            fetch('cut_stock.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        products: productsToUpdate
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('ตัดสต็อกเรียบร้อยแล้ว');
+                        tbody.innerHTML = '<tr><td colspan="7">ไม่พบข้อมูลสินค้า</td></tr>';
+                        updateTotalItemsAndQuantity();
+                        calculateTotalPrice();
+                    } else {
+                        alert('เกิดข้อผิดพลาดในการตัดสต็อก');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
     });
-
-    if (productsToUpdate.length === 0) {
-        alert('ไม่มีสินค้าที่จะตัดสต็อก');
-        return;
-    }
-
-    // แสดง Alert เพื่อยืนยันการตัดสต็อก
-    if (confirm('คุณต้องการตัดสต็อกสินค้าทั้งหมดนี้ใช่หรือไม่?')) {
-        // ส่งข้อมูลไปยังเซิร์ฟเวอร์ผ่าน fetch
-        fetch('cut_stock.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ products: productsToUpdate })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('ตัดสต็อกเรียบร้อยแล้ว');
-                // ลบแถวทั้งหมดออกจากตารางหลังตัดสต็อก
-                tbody.innerHTML = '<tr><td colspan="7">ไม่พบข้อมูลสินค้า</td></tr>';
-                updateTotalItemsAndQuantity();
-                calculateTotalPrice();
-            } else {
-                alert('เกิดข้อผิดพลาดในการตัดสต็อก');
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
-});
-
     </script>
 
 </body>
