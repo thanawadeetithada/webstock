@@ -1,7 +1,7 @@
 <?php
 session_start();
-include('include/header.php');
-include('config.php');
+include 'include/header.php';
+include 'config.php';
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
@@ -9,13 +9,13 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 if (isset($_GET['startDate']) && isset($_GET['endDate'])) {
-    include('config.php');
+    include 'config.php';
 
     $startDate = $_GET['startDate'];
     $endDate = $_GET['endDate'];
 
-    $sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, category 
-            FROM products 
+    $sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, out_stock_date
+            FROM products
             WHERE expiry_date BETWEEN ? AND ?";
     $stmt = $conn->prepare($sql);
     if (!$stmt) {
@@ -50,11 +50,11 @@ $username = isset($_SESSION['username']) ? $_SESSION['username'] : 'ผู้ใ
 $total_items = 0;
 $total_quantity = 0;
 $total_price = 0;
- 
-$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, category FROM products
- WHERE status = 'out'";
-$result = $conn->query($sql);
 
+$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, out_stock_date , status
+FROM products
+WHERE status IN ('out', 'sell')";
+$result = $conn->query($sql);
 
 $sticker_styles = [
     'หมดอายุเดือน 1' => 'background-color: #E3D200; color: #000;',
@@ -119,107 +119,107 @@ $sticker_styles = [
     }
 
     body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 20px;
-        }
+        font-family: Arial, sans-serif;
+        background-color: #f9f9f9;
+        margin: 0;
+        padding: 20px;
+    }
 
-        .container {
-            max-width: 80%;
-            margin: auto;
-            background: #fff;
-            padding: 2.5rem;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.1);
-            margin-top: 6.5rem;
-            position: relative;
-        }
+    .container {
+        max-width: 80%;
+        margin: auto;
+        background: #fff;
+        padding: 2.5rem;
+        border-radius: 8px;
+        box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.1);
+        margin-top: 6.5rem;
+        position: relative;
+    }
 
-        .search-container {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 25px;
-            width: 100%;
-        }
+    .search-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 25px;
+        width: 100%;
+    }
 
-        .center-section {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            align-items: flex-end;
-        }
+    .center-section {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        align-items: flex-end;
+    }
 
-        .dropdown-container {
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            font-family: Arial, sans-serif;
-        }
+    .dropdown-container {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        font-family: Arial, sans-serif;
+    }
 
-        .dropdown-container input {
-            padding: 6px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            flex-shrink: 1;
-            width: -webkit-fill-available;
-        }
+    .dropdown-container input {
+        padding: 6px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        flex-shrink: 1;
+        width: -webkit-fill-available;
+    }
 
-        .dropdown-container label {
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #003d99;
-        }
+    .dropdown-container label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #003d99;
+    }
 
-        select {
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            font-size: 16px;
-            width: 100%;
-            outline: none;
-        }
+    select {
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+        width: 100%;
+        outline: none;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
 
-        table th,
-        table td {
-            text-align: center;
-            padding: 10px;
-            border: 1px solid #ddd;
-        }
+    table th,
+    table td {
+        text-align: center;
+        padding: 10px;
+        border: 1px solid #ddd;
+    }
 
-        table th {
-            background-color: #f1f1f1;
-        }
+    table th {
+        background-color: #f1f1f1;
+    }
 
-        .center-button {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-            margin-right: 6.5rem;
-        }
+    .center-button {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+        margin-right: 6.5rem;
+    }
 
-        .print-buttons {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+    .print-buttons {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
 
-        .print-buttons button {
-            font-size: 14px;
-            border-radius: 5px;
-            color: black;
-            border: none;
-            cursor: pointer;
-            background-color: white;
-        }
+    .print-buttons button {
+        font-size: 14px;
+        border-radius: 5px;
+        color: black;
+        border: none;
+        cursor: pointer;
+        background-color: white;
+    }
 
     button:disabled {
         background-color: #ccc;
@@ -255,12 +255,12 @@ $sticker_styles = [
                     <select id="productCategory" name="productCategory">
                         <option value="">ทั้งหมด</option>
                         <?php
-                        if ($result_status->num_rows > 0) {
-                            while ($row = $result_status->fetch_assoc()) {
-                                echo "<option value='" . $row['status'] . "'>" . $row['status'] . "</option>";
-                            }
-                        }
-                        ?>
+if ($result_status->num_rows > 0) {
+    while ($row = $result_status->fetch_assoc()) {
+        echo "<option value='" . $row['status'] . "'>" . $row['status'] . "</option>";
+    }
+}
+?>
                     </select>
                 </div>
 
@@ -280,33 +280,35 @@ $sticker_styles = [
                     <th>สีสติ๊กเกอร์</th>
                     <th>ราคา</th>
                     <th>วันหมดอายุ</th>
-                    <th>หมวดหมู่สินค้า</th>
+                    <th>วันตัดสต็อก</th>
+                    <th>สถานะ</th>
                 </tr>
             </thead>
             <tbody id="product-table-body">
                 <?php
-                $no = 1;
-                if ($result->num_rows > 0) {
-                    while($row = $result->fetch_assoc()) {
-                        $sticker_color = $row['sticker_color'];
-                        $sticker_style = isset($sticker_styles[$sticker_color]) ? $sticker_styles[$sticker_color] : 'background-color: #999999; color: #fff;';
-                
-                        echo "<tr data-product-code='" . $row['product_code'] . "'>";
-                        echo "<td>" . $no++ . "</td>";
-                        echo "<td>" . $row['product_code'] . "</td>";
-                        echo "<td>" . $row['product_name'] . "</td>";
-                        echo "<td>" . $row['quantity'] . "</td>";
-                        echo "<td>" . $row['unit'] . "</td>";
-                        echo "<td><button style='width: 100%; $sticker_style' disabled>" . $sticker_color . "</button></td>";
-                        echo "<td>" . $row['unit_cost'] . "</td>";
-                        echo "<td>" . $row['expiry_date'] . "</td>";
-                        echo "<td>" . $row['category'] . "</td>";
-                        echo "</tr>";
-                    }
-                } else {
-                    echo "<tr><td colspan='9'>ไม่พบข้อมูลสินค้า</td></tr>";
-                }
-                ?>
+$no = 1;
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $sticker_color = $row['sticker_color'];
+        $sticker_style = isset($sticker_styles[$sticker_color]) ? $sticker_styles[$sticker_color] : 'background-color: #999999; color: #fff;';
+
+        echo "<tr data-product-code='" . htmlspecialchars($row['product_code']) . "'>";
+        echo "<td>" . $no++ . "</td>";
+        echo "<td>" . htmlspecialchars($row['product_code']) . "</td>";
+        echo "<td>" . htmlspecialchars($row['product_name']) . "</td>";
+        echo "<td>" . htmlspecialchars($row['quantity']) . "</td>";
+        echo "<td>" . htmlspecialchars($row['unit']) . "</td>";
+        echo "<td><button style='width: 100%; $sticker_style' disabled>" . htmlspecialchars($sticker_color) . "</button></td>";
+        echo "<td>" . htmlspecialchars($row['unit_cost']) . "</td>";
+        echo "<td>" . htmlspecialchars($row['expiry_date']) . "</td>";
+        echo "<td>" . (!empty($row['out_stock_date']) ? htmlspecialchars($row['out_stock_date']) : 'ไม่มีข้อมูล') . "</td>";
+        echo "<td>" . htmlspecialchars($row['status']) . "</td>";
+        echo "</tr>";
+    }
+} else {
+    echo "<tr><td colspan='10'>ไม่พบข้อมูลสินค้า</td></tr>";
+}
+?>
             </tbody>
         </table>
     </div>
@@ -346,22 +348,10 @@ $sticker_styles = [
             const expiryDate = new Date(row.cells[7].textContent.trim()); // คอลัมน์ "วันหมดอายุ"
             return expiryDate >= startDate && expiryDate <= endDate;
         });
-        filteredRows.sort((a, b) => {
-            const dateA = new Date(a.cells[7].textContent.trim());
-            const dateB = new Date(b.cells[7].textContent.trim());
-            return dateA - dateB;
-        });
-        const tableBody = document.getElementById("product-table-body");
-        tableBody.innerHTML = "";
 
-        if (filteredRows.length === 0) {
-            tableBody.innerHTML = "<tr><td colspan='9'>ไม่พบข้อมูลในช่วงวันที่ที่เลือก</td></tr>";
-        } else {
-            filteredRows.forEach((row) => {
-                tableBody.appendChild(row);
-            });
-        }
+        renderSortedRows(filteredRows);
     });
+
 
     function toggleSearchButton() {
         const startDate = document.getElementById("startDate").value;
@@ -388,6 +378,39 @@ $sticker_styles = [
         toggleSearchButton();
     });
     toggleSearchButton();
+
+    // เก็บแถวต้นฉบับไว้ในตัวแปรเมื่อโหลดหน้าเว็บ
+    const originalRows = Array.from(document.querySelectorAll("#product-table-body tr"));
+
+    document.getElementById("productCategory").addEventListener("change", function() {
+        const selectedStatus = this.value;
+        const filteredRows = originalRows.filter((row) => {
+            const statusCell = row.cells[9]; // คอลัมน์ "สถานะ" (index 9)
+            return selectedStatus === "" || (statusCell && statusCell.textContent.trim() ===
+                selectedStatus);
+        });
+
+        renderSortedRows(filteredRows);
+    });
+
+    function renderSortedRows(rows) {
+        rows.sort((a, b) => {
+            const indexA = parseInt(a.cells[0].textContent.trim());
+            const indexB = parseInt(b.cells[0].textContent.trim());
+            return indexA - indexB;
+        });
+
+        const tableBody = document.getElementById("product-table-body");
+        tableBody.innerHTML = "";
+
+        if (rows.length === 0) {
+            tableBody.innerHTML = "<tr><td colspan='10'>ไม่พบข้อมูล</td></tr>";
+        } else {
+            rows.forEach((row) => {
+                tableBody.appendChild(row.cloneNode(true));
+            });
+        }
+    }
     </script>
 
 </body>
