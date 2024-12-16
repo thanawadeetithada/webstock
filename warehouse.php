@@ -24,6 +24,21 @@ $result_unit = $conn->query($sql_unit);
 $sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, category 
         FROM products WHERE status = 'active'";
 $result = $conn->query($sql);
+
+$sticker_styles = [
+    'หมดอายุเดือน 1' => 'background-color: #E3D200; color: #000;',
+    'หมดอายุเดือน 2' => 'background-color: #00C4B4; color: #fff;',
+    'หมดอายุเดือน 3' => 'background-color: #EE700E; color: #fff;',
+    'หมดอายุเดือน 4' => 'background-color: #EA12B1; color: #fff;',
+    'หมดอายุเดือน 5' => 'background-color: #C8E9F0; color: #000;',
+    'หมดอายุเดือน 6' => 'background-color: #02A737; color: #fff;',
+    'หมดอายุเดือน 7' => 'background-color: #EAEAA2; color: #000;',
+    'หมดอายุเดือน 8' => 'background-color: #00A1CD; color: #fff;',
+    'หมดอายุเดือน 9' => 'background-color: #AA7964; color: #fff;',
+    'หมดอายุเดือน 10' => 'background-color: #F4D3DC; color: #000;',
+    'หมดอายุเดือน 11' => 'background-color: #B9F4A2; color: #000;',
+    'หมดอายุเดือน 12' => 'background-color: #FFFFFF; color: #000; border: 1px solid #ccc;',
+];
 ?>
 
 <!DOCTYPE html>
@@ -74,6 +89,8 @@ $result = $conn->query($sql);
         transform: translateY(-160%);
         font-size: 18px;
         color: #aaa;
+        top: 25vh;
+        padding-bottom: 2px;
     }
 
     .right-section {
@@ -125,6 +142,11 @@ $result = $conn->query($sql);
         padding-top: 8px;
         padding-bottom: 7px;
     }
+      
+    ::-webkit-scrollbar {
+        display: none;
+    }
+
     </style>
 </head>
 
@@ -132,9 +154,7 @@ $result = $conn->query($sql);
     <div class="container">
         <div class="search-container">
             <input type="text" id="search-box" placeholder="ค้นหาชื่อสินค้า/รหัสสินค้า">
-            <button>
                 <i class="fa-solid fa-magnifying-glass"></i>
-            </button>
             <div class="right-section">
                 <div class="dropdown-container">
                     <label for="productCategory">หมวดหมู่สินค้า</label>
@@ -191,13 +211,16 @@ $result = $conn->query($sql);
                 $no = 1;
                 if ($result->num_rows > 0) {
                     while($row = $result->fetch_assoc()) {
+                        $sticker_color = $row['sticker_color'];
+                        $sticker_style = isset($sticker_styles[$sticker_color]) ? $sticker_styles[$sticker_color] : 'background-color: #999999; color: #fff;';
+                
                         echo "<tr data-product-code='" . $row['product_code'] . "'>";
                         echo "<td>" . $no++ . "</td>";
                         echo "<td>" . $row['product_code'] .  "</td>";
                         echo "<td>" . $row['product_name'] . "</td>";
                         echo "<td>" . $row['quantity'] . "</td>";
                         echo "<td>" . $row['unit'] . "</td>";
-                        echo "<td>" . $row['sticker_color'] . "</td>";
+                        echo "<td><button style='width: 100%; $sticker_style' disabled>" . $sticker_color . "</button></td>";
                         echo "<td>" . $row['expiry_date'] . "</td>";
                         echo "<td>" . $row['category'] . "</td>";
                         echo "</tr>";

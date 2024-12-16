@@ -134,6 +134,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         transform: translateY(-160%);
         font-size: 18px;
         color: #aaa;
+        top: 25vh;
+        padding-bottom: 4px;
     }
 
     table {
@@ -163,9 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container">
         <div class="search-container">
             <input type="text" id="search-box" placeholder="ค้นหาสินค้า...">
-            <button>
                 <i class="fa-solid fa-magnifying-glass"></i>
-            </button>
             <div class="search-info">
                 <span class="label">วันที่</span> <?= $current_date ?>
                 <span class="label">เวลา</span> <?= $current_time ?>

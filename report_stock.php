@@ -54,6 +54,22 @@ $total_price = 0;
 $sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, category FROM products
  WHERE status = 'out'";
 $result = $conn->query($sql);
+
+
+$sticker_styles = [
+    'หมดอายุเดือน 1' => 'background-color: #E3D200; color: #000;',
+    'หมดอายุเดือน 2' => 'background-color: #00C4B4; color: #fff;',
+    'หมดอายุเดือน 3' => 'background-color: #EE700E; color: #fff;',
+    'หมดอายุเดือน 4' => 'background-color: #EA12B1; color: #fff;',
+    'หมดอายุเดือน 5' => 'background-color: #C8E9F0; color: #000;',
+    'หมดอายุเดือน 6' => 'background-color: #02A737; color: #fff;',
+    'หมดอายุเดือน 7' => 'background-color: #EAEAA2; color: #000;',
+    'หมดอายุเดือน 8' => 'background-color: #00A1CD; color: #fff;',
+    'หมดอายุเดือน 9' => 'background-color: #AA7964; color: #fff;',
+    'หมดอายุเดือน 10' => 'background-color: #F4D3DC; color: #000;',
+    'หมดอายุเดือน 11' => 'background-color: #B9F4A2; color: #000;',
+    'หมดอายุเดือน 12' => 'background-color: #FFFFFF; color: #000; border: 1px solid #ccc;',
+];
 ?>
 
 <!DOCTYPE html>
@@ -202,11 +218,16 @@ $result = $conn->query($sql);
             color: black;
             border: none;
             cursor: pointer;
+            background-color: white;
         }
 
     button:disabled {
         background-color: #ccc;
         cursor: not-allowed;
+    }
+
+    ::-webkit-scrollbar {
+        display: none;
     }
     </style>
 </head>
@@ -251,17 +272,6 @@ $result = $conn->query($sql);
         <table>
             <thead>
                 <tr>
-                <!-- // <th>ลำดับ</th>
-                   // <th>รหัสสินค้า</th>
-                   // <th>ชื่อสินค้า</th>
-                  //  <th>จำนวน</th>
-                 //   <th>หน่วย</th>
-                    <th>สีสติ๊กเกอร์</th>
-                    <th>ราคา</th>
-                    <th>วันหมดอายุ</th>
-                    <th>วันตัดสต็อก</th>
-                    <th>สถานะ</th> -->
-
                     <th>ลำดับ</th>
                     <th>รหัสสินค้า</th>
                     <th>ชื่อสินค้า</th>
@@ -278,20 +288,23 @@ $result = $conn->query($sql);
                 $no = 1;
                 if ($result->num_rows > 0) {
                     while($row = $result->fetch_assoc()) {
+                        $sticker_color = $row['sticker_color'];
+                        $sticker_style = isset($sticker_styles[$sticker_color]) ? $sticker_styles[$sticker_color] : 'background-color: #999999; color: #fff;';
+                
                         echo "<tr data-product-code='" . $row['product_code'] . "'>";
                         echo "<td>" . $no++ . "</td>";
                         echo "<td>" . $row['product_code'] . "</td>";
                         echo "<td>" . $row['product_name'] . "</td>";
                         echo "<td>" . $row['quantity'] . "</td>";
                         echo "<td>" . $row['unit'] . "</td>";
-                        echo "<td>" . $row['sticker_color'] . "</td>";
+                        echo "<td><button style='width: 100%; $sticker_style' disabled>" . $sticker_color . "</button></td>";
                         echo "<td>" . $row['unit_cost'] . "</td>";
                         echo "<td>" . $row['expiry_date'] . "</td>";
                         echo "<td>" . $row['category'] . "</td>";
                         echo "</tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='8'>ไม่พบข้อมูลสินค้า</td></tr>";
+                    echo "<tr><td colspan='9'>ไม่พบข้อมูลสินค้า</td></tr>";
                 }
                 ?>
             </tbody>

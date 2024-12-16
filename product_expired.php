@@ -51,6 +51,22 @@ $total_price = 0;
 
 $sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, category FROM products";
 $result = $conn->query($sql);
+
+$sticker_styles = [
+    'หมดอายุเดือน 1' => 'background-color: #E3D200; color: #000;',
+    'หมดอายุเดือน 2' => 'background-color: #00C4B4; color: #fff;',
+    'หมดอายุเดือน 3' => 'background-color: #EE700E; color: #fff;',
+    'หมดอายุเดือน 4' => 'background-color: #EA12B1; color: #fff;',
+    'หมดอายุเดือน 5' => 'background-color: #C8E9F0; color: #000;',
+    'หมดอายุเดือน 6' => 'background-color: #02A737; color: #fff;',
+    'หมดอายุเดือน 7' => 'background-color: #EAEAA2; color: #000;',
+    'หมดอายุเดือน 8' => 'background-color: #00A1CD; color: #fff;',
+    'หมดอายุเดือน 9' => 'background-color: #AA7964; color: #fff;',
+    'หมดอายุเดือน 10' => 'background-color: #F4D3DC; color: #000;',
+    'หมดอายุเดือน 11' => 'background-color: #B9F4A2; color: #000;',
+    'หมดอายุเดือน 12' => 'background-color: #FFFFFF; color: #000; border: 1px solid #ccc;',
+    'ไม่มีวันหมดอายุ' => 'background-color: #999999; color: #fff;',
+];
 ?>
 
 <!DOCTYPE html>
@@ -61,7 +77,7 @@ $result = $conn->query($sql);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ค้นหาสินค้าหมดอายุ</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
     @media print {
         body * {
@@ -198,11 +214,16 @@ $result = $conn->query($sql);
         color: black;
         border: none;
         cursor: pointer;
+        background-color: white;
     }
 
     button:disabled {
         background-color: #ccc;
         cursor: not-allowed;
+    }
+    
+    ::-webkit-scrollbar {
+        display: none;
     }
     </style>
 </head>
@@ -248,6 +269,9 @@ $result = $conn->query($sql);
                 $no = 1;
                 if ($result->num_rows > 0) {
                     while($row = $result->fetch_assoc()) {
+                        $sticker_color = $row['sticker_color'];
+                        $sticker_style = isset($sticker_styles[$sticker_color]) ? $sticker_styles[$sticker_color] : 'background-color: #999999; color: #fff;';
+                
                         echo "<tr data-product-code='" . $row['product_code'] . "'>";
                         echo "<td>" . $no++ . "</td>";
                         echo "<td>" . $row['product_code'] . "</td>";
@@ -255,7 +279,7 @@ $result = $conn->query($sql);
                         echo "<td>" . $row['quantity'] . "</td>";
                         echo "<td>" . $row['unit'] . "</td>";
                         echo "<td>" . $row['unit_cost'] . "</td>";
-                        echo "<td>" . $row['sticker_color'] . "</td>";
+                        echo "<td style='" . $sticker_style . "'>" . $row['sticker_color'] . "</td>";
                         echo "<td>" . $row['expiry_date'] . "</td>";
                         echo "<td>" . $row['category'] . "</td>";
                         echo "</tr>";
