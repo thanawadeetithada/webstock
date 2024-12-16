@@ -1,7 +1,9 @@
 <?php
 session_start();
-include('include/header.php');
-include('config.php');
+if (!isset($_POST['search'])) {
+    include 'include/header.php';
+}
+include 'config.php';
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
@@ -9,81 +11,35 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $username = isset($_SESSION['username']) ? $_SESSION['username'] : 'ผู้ใช้';
-
 $total_items = 0;
 $total_quantity = 0;
 $total_price = 0;
-
 $current_date = date('d/m/Y');
 $current_time = date('H:i:s');
 
-$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, category FROM products
- WHERE status = 'out'";
-$result = $conn->query($sql);
+if (isset($_POST['search'])) {
+    $search_code = $_POST['search'];
+    $query = $conn->prepare("SELECT * FROM products WHERE product_code = ?");
+    $query->bind_param("s", $search_code);
+    $query->execute();
+    $result = $query->get_result();
 
-if (isset($_POST['product_code'])) {
-    $product_codes = json_decode($_POST['product_code']); // รับค่าเป็นอาร์เรย์ของ product_code
-    
-    if (!empty($product_codes)) {
-        // สร้าง SQL สำหรับลบสินค้า
-        $product_codes_placeholder = implode(",", array_fill(0, count($product_codes), "?"));
-        $sql = "DELETE FROM products WHERE product_code IN ($product_codes_placeholder)";
-        
-        if ($stmt = $conn->prepare($sql)) {
-            // ผูกค่าพารามิเตอร์
-            $stmt->bind_param(str_repeat('s', count($product_codes)), ...$product_codes); // 's' ใช้สำหรับ string
-            if ($stmt->execute()) {
-                echo "ลบรายการสินค้าสำเร็จ!"; // ส่งข้อความเมื่อสำเร็จ
-            } else {
-                echo "ไม่สามารถลบสินค้าบางรายการได้"; // ส่งข้อความเมื่อเกิดข้อผิดพลาด
-            }
-            $stmt->close();
-        } else {
-            echo "เกิดข้อผิดพลาดในการเตรียมคำสั่ง SQL"; // ส่งข้อความเมื่อเกิดข้อผิดพลาดในการเตรียม SQL
-        }
+    if ($result->num_rows > 0) {
+        $product = $result->fetch_assoc();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'product' => $product
+        ]);
     } else {
-        echo "ไม่มีสินค้าที่เลือก"; // ส่งข้อความเมื่อไม่มีสินค้าที่เลือก
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'ไม่พบข้อมูลสินค้า'
+        ]);
     }
-} else {
-    echo "ข้อมูลไม่ถูกต้อง"; // ส่งข้อความเมื่อไม่มีข้อมูลที่คาดหวัง
+    exit;
 }
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $input = json_decode(file_get_contents('php://input'), true);
-
-    if (isset($input['action']) && $input['action'] === 'stock_out') {
-        $product_codes = $input['product_codes'];
-
-        if (!empty($product_codes)) {
-            $placeholders = implode(',', array_fill(0, count($product_codes), '?'));
-            $sql = "UPDATE products SET status = 'out' WHERE product_code IN ($placeholders)";
-            $stmt = $conn->prepare($sql);
-
-            if (!$stmt) {
-                http_response_code(500);
-                echo json_encode(['error' => 'เกิดข้อผิดพลาดในการเตรียมคำสั่ง SQL']);
-                exit;
-            }
-
-            $stmt->bind_param(str_repeat('s', count($product_codes)), ...$product_codes);
-
-            if ($stmt->execute()) {
-                http_response_code(200);
-                echo json_encode(['success' => 'อัปเดตสถานะสำเร็จ']);
-            } else {
-                http_response_code(500);
-                echo json_encode(['error' => 'เกิดข้อผิดพลาดในการอัปเดตฐานข้อมูล']);
-            }
-
-            $stmt->close();
-        } else {
-            http_response_code(400);
-            echo json_encode(['error' => 'ไม่มีสินค้าที่เลือก']);
-        }
-        exit;
-    }
-}
-
 ?>
 
 <!DOCTYPE html>
@@ -134,8 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         transform: translateY(-160%);
         font-size: 18px;
         color: #aaa;
-        top: 25vh;
-        padding-bottom: 4px;
+        top: 22vh;
+        padding-bottom: 2px;
     }
 
     table {
@@ -165,11 +121,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container">
         <div class="search-container">
             <input type="text" id="search-box" placeholder="ค้นหาสินค้า...">
-                <i class="fa-solid fa-magnifying-glass"></i>
+            <i class="fa-solid fa-magnifying-glass"></i>
             <div class="search-info">
-                <span class="label">วันที่</span> <?= $current_date ?>
-                <span class="label">เวลา</span> <?= $current_time ?>
-                <span class="label">ผู้ทำการขาย</span> <?= $username ?>
+                <span class="label">วันที่</span> <?=$current_date?>
+                <span class="label">เวลา</span> <?=$current_time?>
+                <span class="label">ผู้ทำการขาย</span> <?=$username?>
             </div>
         </div>
         <table>
@@ -185,191 +141,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </tr>
             </thead>
             <tbody>
-                <?php
-                $no = 1;
-                if ($result->num_rows > 0) {
-                    while($row = $result->fetch_assoc()) {
-                        echo "<tr data-product-code='" . $row['product_code'] . "'>";
-                        echo "<td><input type='checkbox' class='select-item' data-product-code='" . $row['product_code'] . "'></td>";
-                        echo "<td>" . $no++ . "</td>";
-                        echo "<td>" . $row['product_name'] .  "</td>";
-                        echo "<td>" . $row['quantity'] . "</td>";
-                        echo "<td>" . $row['unit_cost'] . "</td>";
-                        echo "<td>" . $row['product_code'] . "</td>";
-                        echo "<td>" . $row['expiry_date'] . "</td>";
-                    }
-                } else {
-                    echo "<tr><td colspan='6'>ไม่พบข้อมูลสินค้า</td></tr>";
-                }
-                ?>
-            </tbody>
-            <tfoot>
-                <tr class="footer-row">
-                    <td colspan="1"></td>
-                    <td colspan="2">รวม <?= $total_items ?> รายการ <?= number_format($total_quantity) ?> ชิ้น</td>
-                    <td colspan="2">รวม <?= number_format($total_price, 2) ?> บาท</td>
-                    <td colspan="2">
-                        <button class="btn btn-danger" id="delete-selected">ลบรายการ</button>
-                        <button class="btn btn-danger" id="stock-out-selected">ตัดสต็อก</button>
-                    </td>
+                <tr>
+                    <td colspan='7'>ไม่พบข้อมูลสินค้า</td>
                 </tr>
-            </tfoot>
+            </tbody>
         </table>
     </div>
-
     <script>
-    document.getElementById('select-all').addEventListener('change', function() {
-        const isChecked = this.checked;
-        const checkboxes = document.querySelectorAll('.select-item');
+    document.getElementById('search-box').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            const searchValue = this.value.trim();
 
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = isChecked;
-        });
-    });
-
-    document.getElementById('delete-selected').addEventListener('click', function() {
-        const selectedCheckboxes = document.querySelectorAll('.select-item:checked');
-        const selectedProductCodes = [];
-
-        selectedCheckboxes.forEach(checkbox => {
-            const productCode = checkbox.getAttribute('data-product-code');
-            selectedProductCodes.push(productCode);
-        });
-
-        if (selectedProductCodes.length > 0) {
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', '', true);
-            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-            xhr.onload = function() {
-                if (xhr.status === 200) {
-                    alert('ยันยันการลบรายการนี้ใช่ไหม?');
-                    location.reload();
-                } else {
-                    alert('Error: Could not delete selected products.');
-                }
-            };
-
-            xhr.send('product_code=' + JSON.stringify(selectedProductCodes));
-        } else {
-            alert('กรุณาเลือกสินค้าที่จะลบ');
+            if (searchValue) {
+                fetch('', { // ส่งไปที่ไฟล์เดียวกัน
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'search=' + encodeURIComponent(searchValue)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const product = data.product;
+                        addProductToTable(product);
+                    } else {
+                        alert(data.message);
+                    }
+                    document.getElementById('search-box').value = ''; // Clear the input
+                })
+                .catch(error => console.error('Error:', error));
+            }
         }
     });
 
-    function calculateTotals() {
-        const rows = document.querySelectorAll('table tbody tr');
+    // ฟังก์ชันเพิ่มสินค้าไปยังตาราง
+    function addProductToTable(product) {
+        const tbody = document.querySelector('table tbody');
+        
+        // ลบแถว "ไม่พบข้อมูลสินค้า" ถ้ามีอยู่
+        const noDataRow = tbody.querySelector('tr td[colspan="7"]');
+        if (noDataRow) {
+            noDataRow.parentElement.remove();
+        }
 
-        let totalItems = 0;
-        let totalQuantity = 0;
-        let totalPrice = 0;
+        // เพิ่มแถวใหม่
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td><input type="checkbox"></td>
+            <td>${tbody.rows.length + 1}</td>
+            <td>${product.product_name}</td>
+            <td>${product.quantity}</td>
+            <td>${product.unit_price}</td>
+            <td>${product.product_code}</td>
+            <td>${product.expiry_date}</td>
+        `;
 
-        rows.forEach(row => {
-            const noDataCell = row.querySelector('td[colspan="6"]');
-            if (noDataCell && noDataCell.textContent.includes('ไม่พบข้อมูลสินค้า')) {
-                return;
-            }
-
-            const quantityCell = row.querySelector('td:nth-child(4)');
-            const priceCell = row.querySelector('td:nth-child(5)');
-
-            if (row.style.display !== 'none') {
-                totalItems++;
-                if (quantityCell && priceCell) {
-                    const quantity = parseInt(quantityCell.textContent, 10);
-                    const price = parseFloat(priceCell.textContent.replace(' บาท', '').replace(',', ''));
-                    totalQuantity += quantity;
-                    totalPrice += (quantity * price);
-                }
-            }
-        });
-
-        const footerRow = document.querySelector('tfoot .footer-row');
-        footerRow.querySelector('td:nth-child(2)').textContent = `รวม ${totalItems} รายการ ${totalQuantity} ชิ้น`;
-        footerRow.querySelector('td:nth-child(3)').textContent = `รวม ${totalPrice.toFixed(2)} บาท`;
+        tbody.appendChild(newRow);
     }
-
-    document.getElementById('search-box').addEventListener('input', function() {
-        const searchQuery = this.value.toLowerCase();
-        const rows = document.querySelectorAll('table tbody tr');
-
-        let totalItems = 0;
-        let totalQuantity = 0;
-        let totalPrice = 0;
-
-        rows.forEach(row => {
-            let found = false;
-            const cells = row.querySelectorAll('td');
-            const quantityCell = cells[2];
-            const priceCell = cells[5];
-
-            cells.forEach(cell => {
-                if (cell.textContent.toLowerCase().includes(searchQuery)) {
-                    found = true;
-                }
-            });
-
-            if (found) {
-                row.style.display = '';
-                totalItems++;
-
-                if (quantityCell && priceCell) {
-                    const quantity = parseInt(quantityCell.textContent, 10);
-                    const price = parseFloat(priceCell.textContent.replace(' บาท', '').replace(',',
-                        ''));
-                    totalQuantity += quantity;
-                    totalPrice += (quantity * price);
-                }
-            } else {
-                row.style.display = 'none';
-            }
-        });
-
-        const footerRow = document.querySelector('tfoot .footer-row');
-        footerRow.querySelector('td:nth-child(2)').textContent =
-            `รวม ${totalItems} รายการ ${totalQuantity} ชิ้น`;
-        footerRow.querySelector('td:nth-child(3)').textContent = `รวม ${totalPrice.toFixed(2)} บาท`;
-    });
-
-    window.onload = function() {
-        calculateTotals();
-    };
-
-    document.getElementById('stock-out-selected').addEventListener('click', function() {
-        const selectedCheckboxes = document.querySelectorAll('.select-item:checked');
-        const productCodes = [];
-
-        selectedCheckboxes.forEach((checkbox) => {
-            const row = checkbox.closest('tr');
-            const productCode = row.querySelector('td:nth-child(6)').textContent.trim();
-            productCodes.push(productCode);
-        });
-
-        if (productCodes.length > 0) {
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', 'waste_stock.php', true);
-            xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-            xhr.onload = function() {
-                if (xhr.status === 200) {
-                    alert('ตัดสต็อกสำเร็จ!');
-                    location.reload();
-                } else {
-                    console.log('เกิดข้อผิดพลาด: ' + xhr.responseText);
-                }
-            };
-            xhr.send(JSON.stringify({
-                action: 'stock_out',
-                product_codes: productCodes
-            }));
-        } else {
-            alert('กรุณาเลือกสินค้าที่จะตัดสต็อก');
-        }
-    });
     </script>
-
 </body>
 
 </html>
-
-<?php
-
-$conn->close();
-?>

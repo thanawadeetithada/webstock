@@ -10,9 +10,9 @@ if (isset($_POST['logout'])) {
     exit();
 }
 
-$user_logged_in = isset($_SESSION['username']) ? $_SESSION['username'] : null;
+// ตรวจสอบหากคำขอเป็น AJAX ไม่ให้โหลด HTML
+if (!(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest')) {
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -148,3 +148,6 @@ $user_logged_in = isset($_SESSION['username']) ? $_SESSION['username'] : null;
     </script>
 </body>
 </html>
+<?php
+}
+?>
