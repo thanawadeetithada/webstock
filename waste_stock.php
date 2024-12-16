@@ -116,8 +116,6 @@ if (isset($_POST['search'])) {
     }
 
     #action-buttons-row {
-        /* display: none; */
-        /* ซ่อนแถวปุ่มเริ่มต้น */
         text-align: center;
     }
 
