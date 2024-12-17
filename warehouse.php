@@ -142,19 +142,18 @@ $sticker_styles = [
         padding-top: 8px;
         padding-bottom: 7px;
     }
-      
+
     ::-webkit-scrollbar {
         display: none;
     }
-
     </style>
 </head>
 
 <body>
     <div class="container">
         <div class="search-container">
-            <input type="text" id="search-box" placeholder="ค้นหาชื่อสินค้า/รหัสสินค้า">
-                <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="search-box" placeholder="ค้นหาสินค้า...">
+            <i class="fa-solid fa-magnifying-glass"></i>
             <div class="right-section">
                 <div class="dropdown-container">
                     <label for="productCategory">หมวดหมู่สินค้า</label>
@@ -189,7 +188,7 @@ $sticker_styles = [
                 </div>
 
                 <button type="button" class="btn btn-outline-danger" id="resetButton">All
-                    ดูสินค้าทั้งหมดในสต็อกทิ้งหมด</button>
+                    ดูสินค้าในสต็อกทั้งหมด</button>
             </div>
         </div>
 
@@ -234,40 +233,60 @@ $sticker_styles = [
     </div>
 
     <script>
+    const originalRows = Array.from(document.querySelectorAll("#product-table-body tr"));
+
     document.getElementById('resetButton').addEventListener('click', function() {
         document.getElementById('search-box').value = '';
         document.getElementById('productCategory').value = '';
         document.getElementById('unit').value = '';
-        const searchQuery = '';
-        const categoryFilter = '';
-        const unitFilter = '';
-
-        const rows = Array.from(document.querySelectorAll('#product-table-body tr'));
-
-        const filteredRows = rows.filter(row => {
-            const productCode = row.cells[1].textContent.toLowerCase();
-            const productName = row.cells[2].textContent.toLowerCase();
-            const productCategory = row.cells[7].textContent.toLowerCase();
-            const unit = row.cells[4].textContent.toLowerCase();
-
-            return (productCode.includes(searchQuery) || productName.includes(searchQuery)) &&
-                (categoryFilter === '' || productCategory.includes(categoryFilter)) &&
-                (unitFilter === '' || unit.includes(unitFilter));
-        });
-
-        const sortedRows = filteredRows.sort((a, b) => {
-            const codeA = a.cells[1].textContent.toLowerCase();
-            const codeB = b.cells[1].textContent.toLowerCase();
-            return codeA.localeCompare(codeB);
-        });
-
-        const tableBody = document.getElementById('product-table-body');
-        tableBody.innerHTML = '';
-
-        sortedRows.forEach(row => tableBody.appendChild(row));
+        renderSortedRows(originalRows);
     });
-    </script>
 
+    document.getElementById("productCategory").addEventListener("change", filterAndSortRows);
+    document.getElementById("unit").addEventListener("change", filterAndSortRows);
+    document.getElementById("search-box").addEventListener("input", filterAndSortRows);
+
+    function filterAndSortRows() {
+        const selectedCategory = document.getElementById("productCategory").value;
+        const selectedUnit = document.getElementById("unit").value;
+        const searchQuery = document.getElementById("search-box").value.trim().toLowerCase();
+
+        const filteredRows = originalRows.filter((row) => {
+            const categoryCell = row.cells[7];
+            const unitCell = row.cells[4];
+            const productNameCell = row.cells[2];
+            const matchesCategory = selectedCategory === "" || (categoryCell && categoryCell.textContent
+                .trim() === selectedCategory);
+            const matchesUnit = selectedUnit === "" || (unitCell && unitCell.textContent.trim() ===
+                selectedUnit);
+            const matchesSearch = searchQuery === "" || (productNameCell && productNameCell.textContent.trim()
+                .toLowerCase().includes(searchQuery));
+
+            return matchesCategory && matchesUnit && matchesSearch;
+        });
+
+        renderSortedRows(filteredRows);
+    }
+
+    function renderSortedRows(rows) {
+        rows.sort((a, b) => {
+            const indexA = parseInt(a.cells[0].textContent.trim());
+            const indexB = parseInt(b.cells[0].textContent.trim());
+            return indexA - indexB;
+        });
+
+        const tableBody = document.getElementById("product-table-body");
+        tableBody.innerHTML = "";
+
+        if (rows.length === 0) {
+            tableBody.innerHTML = "<tr><td colspan='8'>ไม่พบข้อมูลสินค้า</td></tr>";
+        } else {
+            rows.forEach((row) => {
+                tableBody.appendChild(row);
+            });
+        }
+    }
+    </script>
 </body>
 
 </html>
