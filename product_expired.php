@@ -14,7 +14,7 @@ if (isset($_GET['startDate']) && isset($_GET['endDate'])) {
     $startDate = $_GET['startDate'];
     $endDate = $_GET['endDate'];
 
-    $sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, category 
+    $sql = "SELECT product_code, product_name, quantity, unit, unit_cost, received_date, expiry_date, sticker_color, category 
             FROM products 
             WHERE expiry_date BETWEEN ? AND ?";
     $stmt = $conn->prepare($sql);
@@ -49,7 +49,7 @@ $total_quantity = 0;
 $total_price = 0;
 
 
-$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, category FROM products";
+$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, received_date, expiry_date, sticker_color, category FROM products";
 $result = $conn->query($sql);
 
 $sticker_styles = [
@@ -106,6 +106,11 @@ $sticker_styles = [
             width: 100%;
         }
 
+        td[style*="background-color"] {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
         .print-buttons {
             display: none;
         }
@@ -119,7 +124,7 @@ $sticker_styles = [
         font-family: Arial, sans-serif;
         background-color: #f9f9f9;
         margin: 0;
-        padding: 20px;
+        padding: 0px 20px 10px 20px;
     }
 
     .container {
@@ -208,20 +213,22 @@ $sticker_styles = [
         gap: 10px;
     }
 
-    .print-buttons button {
-        font-size: 14px;
+    .print-buttons button,
+    .print-buttons button:focus {
+        font-size: 16px;
         border-radius: 5px;
         color: black;
         border: none;
         cursor: pointer;
         background-color: white;
+        outline: none;
     }
 
     button:disabled {
         background-color: #ccc;
         cursor: not-allowed;
     }
-    
+
     ::-webkit-scrollbar {
         display: none;
     }
@@ -231,8 +238,9 @@ $sticker_styles = [
 <body>
     <div class="container">
         <div class="print-buttons">
-            <button><i class="fa-solid fa-print"></i></button>
-            <button>พิมพ์รายงาน</button>
+            <button><i class="fa-solid fa-print"></i>
+                <p>พิมพ์รายงาน</p>
+            </button>
         </div>
 
         <div class="search-container">
@@ -259,8 +267,9 @@ $sticker_styles = [
                     <th>จำนวน</th>
                     <th>หน่วย</th>
                     <th>ราคา</th>
-                    <th>สีสติ๊กเกอร์</th>
+                    <th>วันที่รับเข้า</th>
                     <th>วันหมดอายุ</th>
+                    <th>สีสติ๊กเกอร์</th>
                     <th>หมวดหมู่สินค้า</th>
                 </tr>
             </thead>
@@ -279,8 +288,9 @@ $sticker_styles = [
                         echo "<td>" . $row['quantity'] . "</td>";
                         echo "<td>" . $row['unit'] . "</td>";
                         echo "<td>" . $row['unit_cost'] . "</td>";
-                        echo "<td style='" . $sticker_style . "'>" . $row['sticker_color'] . "</td>";
+                        echo "<td>" . $row['received_date'] . "</td>";
                         echo "<td>" . $row['expiry_date'] . "</td>";
+                        echo "<td style='" . $sticker_style . "'>" . $row['sticker_color'] . "</td>";
                         echo "<td>" . $row['category'] . "</td>";
                         echo "</tr>";
                     }

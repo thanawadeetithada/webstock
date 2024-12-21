@@ -19,7 +19,7 @@ $current_time = date('H:i:s');
 
 if (isset($_POST['search'])) {
     $search_code = $_POST['search'];
-    $query = $conn->prepare("SELECT * FROM products WHERE product_code = ? AND status != 'OUT'");
+    $query = $conn->prepare("SELECT * FROM products WHERE product_code = ?");
     $query->bind_param("s", $search_code);
     $query->execute();
     $result = $query->get_result();
@@ -55,7 +55,7 @@ if (isset($_POST['search'])) {
         font-family: Arial, sans-serif;
         background-color: #f9f9f9;
         margin: 0;
-        padding: 20px;
+        padding: 0px 20px 10px 20px;
     }
 
     .container {
@@ -90,7 +90,7 @@ if (isset($_POST['search'])) {
         transform: translateY(-160%);
         font-size: 18px;
         color: #aaa;
-        top: 22vh;
+        top: 20vh;
         padding-bottom: 2px;
     }
 
@@ -115,12 +115,57 @@ if (isset($_POST['search'])) {
         padding: 15px;
     }
 
-    #action-buttons-row {
-        text-align: center;
-    }
-
     .action-buttons button {
         margin-right: 10px;
+    }
+
+    .form-btn form {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .custom-prompt-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .custom-prompt-box {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        width: auto;
+        text-align: center;
+
+        input,
+        input:focus {
+            border-radius: 8px;
+            width: 50%;
+            border: 1px solid #4c4d4f;
+            padding-left: 0.5rem;
+            outline: none;
+        }
+    }
+
+    .custom-prompt-buttons {
+        margin-top: 10px;
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    #custom-prompt-error {
+        color: red;
+        display: none;
+        margin-top: 16px;
     }
     </style>
 </head>
@@ -140,7 +185,7 @@ if (isset($_POST['search'])) {
             <thead>
                 <tr>
                     <th><input type="checkbox" id="select-all"></th>
-                    <th>ลำดับ</th>
+                    <th>No.</th>
                     <th>ชื่อสินค้า</th>
                     <th>จำนวน</th>
                     <th>ราคา/หน่วย</th>
@@ -159,13 +204,29 @@ if (isset($_POST['search'])) {
                         <strong>ชิ้น</strong>
                     </td>
                     <td colspan="2" id="total-price">0.00<strong> บาท</strong></td>
-                    <td colspan="2">
-                        <button id="cut-stock-btn" class="btn btn-primary">ตัดสต็อก</button>
-                        <button id="delete-items-btn" class="btn btn-danger">ลบรายการ</button>
+                    <td colspan="2" class="form-btn">
+                        <form id="payment-form" action="process_out_stock.php" method="POST">
+                            <input type="hidden" name="products" id="products-input">
+                            <input type="hidden" name="total_price" id="total-price-input">
+                            <button type="submit" id="out-stock-btn" class="btn btn-primary">ตัดสต็อก</button>
+                            <button id="delete-items-btn" class="btn btn-danger" type="button">ลบรายการ</button>
+                        </form>
                     </td>
                 </tr>
             </tfoot>
         </table>
+    </div>
+
+    <div id="custom-prompt" class="custom-prompt-overlay" style="display: none;">
+        <div class="custom-prompt-box">
+            <p id="custom-prompt-message"></p>
+            <input type="number" id="custom-prompt-input" min="1">
+            <p id="custom-prompt-error">กรุณาใส่จำนวนสินค้าที่ถูกต้อง</p>
+            <div class="custom-prompt-buttons">
+                <button id="custom-prompt-ok" class="btn btn-primary btn-sm">ตกลง</button>
+                <button id="custom-prompt-cancel" class="btn btn-danger btn-sm">ยกเลิก</button>
+            </div>
+        </div>
     </div>
     <script>
     document.getElementById('select-all').addEventListener('change', function() {
@@ -174,6 +235,35 @@ if (isset($_POST['search'])) {
             checkbox.checked = this.checked;
         });
     });
+
+    function showCustomPrompt(message, maxQuantity, callback) {
+        const promptOverlay = document.getElementById('custom-prompt');
+        const promptMessage = document.getElementById('custom-prompt-message');
+        const promptInput = document.getElementById('custom-prompt-input');
+        const errorText = document.getElementById('custom-prompt-error');
+
+        promptMessage.textContent = message;
+        promptInput.value = 1;
+        promptOverlay.style.display = 'flex';
+        errorText.style.display = 'none';
+        promptInput.focus();
+
+        document.getElementById('custom-prompt-ok').onclick = function() {
+            const quantityValue = parseInt(promptInput.value);
+            if (!isNaN(quantityValue) && quantityValue > 0 && quantityValue <= maxQuantity) {
+                promptOverlay.style.display = 'none';
+                callback(quantityValue);
+            } else {
+                errorText.style.display = 'block';
+            }
+        };
+
+        document.getElementById('custom-prompt-cancel').onclick = function() {
+            promptOverlay.style.display = 'none';
+            callback(null);
+        };
+    }
+
 
     function updateTotalItemsAndQuantity() {
         const tbody = document.querySelector('table tbody');
@@ -190,7 +280,6 @@ if (isset($_POST['search'])) {
             }
         });
 
-        // อัปเดตช่องแสดงผลรวมจำนวนรายการและจำนวนชิ้น
         document.getElementById('total-items-and-quantity').innerHTML =
             `<strong>รวม</strong> ${totalItems} <strong>รายการ</strong> ${totalQuantity} <strong>ชิ้น</strong>`;
     }
@@ -210,80 +299,102 @@ if (isset($_POST['search'])) {
             }
         });
 
-        // อัปเดตช่องแสดงผลรวมใน tfoot
         document.getElementById('total-price').innerHTML = totalPrice.toFixed(2) + ' <strong>บาท</strong>';
     }
 
-    // เรียกฟังก์ชันนี้หลังจากเพิ่มสินค้าไปยังตาราง
     function addProductToTable(product) {
         const tbody = document.querySelector('table tbody');
 
-        // ตรวจสอบว่ามี product_code ซ้ำกันไหม
-        const existingCodes = Array.from(tbody.querySelectorAll('tr')).map(row => {
-            return row.cells[5]?.textContent;
+        const existingCodes = Array.from(tbody.querySelectorAll('input[name="product_code"]')).map(input => {
+            return input.value;
         });
 
-        if (existingCodes.includes(product.product_code)) {
-            alert('มีข้อมูลสินค้านี้อยู่แล้ว');
-            return; // หยุดการทำงานหากพบว่า product_code ซ้ำ
-        }
-
-        // ลบแถว "ไม่พบข้อมูลสินค้า" ถ้ามีอยู่
         const noDataRow = tbody.querySelector('tr td[colspan="7"]');
         if (noDataRow) {
             noDataRow.parentElement.remove();
         }
 
-        // เพิ่มแถวใหม่
         const newRow = document.createElement('tr');
         newRow.innerHTML = `
-        <td><input type="checkbox"></td>
+       <td><input type="checkbox"></td>
         <td>${tbody.rows.length + 1}</td>
-        <td>${product.product_name}</td>
+         <td>${product.product_name}</td>
         <td>${product.quantity}</td>
-        <td>${product.unit_price}</td>
-        <td>${product.product_code}</td>
-        <td>${product.expiry_date}</td>
+         <td>${product.unit_price}</td>
+         <td>${product.product_code}</td>
+         <td>${product.expiry_date}</td>
+
+        <input type="hidden" name="unit" value="${product.unit}">
+        <input type="hidden" name="product_model" value="${product.product_model}">
+        <input type="hidden" name="production_date" value="${product.production_date}">
+        <input type="hidden" name="shelf_life" value="${product.shelf_life}">
+        <input type="hidden" name="sticker_color" value="${product.sticker_color}">
+        <input type="hidden" name="reminder_date" value="${product.reminder_date}">
+        <input type="hidden" name="receive_date" value="${product.receive_date}">
+        <input type="hidden" name="unit_cost" value="${product.unit_cost}">
+        <input type="hidden" name="sender_code" value="${product.sender_code}">
+        <input type="hidden" name="sender_company" value="${product.sender_company}">
+        <input type="hidden" name="recorder" value="${product.recorder}">
+        <input type="hidden" name="category" value="${product.category}">
+        <input type="hidden" name="status" value="${product.status}">
     `;
 
         tbody.appendChild(newRow);
-
-        // เรียกฟังก์ชันคำนวณผลรวมราคาและจำนวนรายการ
         calculateTotalPrice();
         updateTotalItemsAndQuantity();
     }
 
-    // เรียกฟังก์ชันคำนวณผลรวมหลังจากลบแถว
+    document.getElementById('out-stock-btn').addEventListener('click', function(event) {
+        if (allProducts.length === 0) {
+            alert('กรุณาค้นหาสินค้าก่อนตัดสต็อก');
+            event.preventDefault();
+            return;
+        }
+
+        // เก็บข้อมูลทั้งหมดในฟิลด์ hidden
+        document.getElementById('products-input').value = JSON.stringify(allProducts);
+
+        // คำนวณราคาทั้งหมด
+        const totalPrice = allProducts.reduce((sum, product) => {
+            const quantity = parseInt(product.quantity || 0);
+            const unitPrice = parseFloat(product.unit_price || 0);
+            return sum + (quantity * unitPrice);
+        }, 0);
+
+        document.getElementById('total-price-input').value = totalPrice.toFixed(2);
+    });
+
     document.getElementById('delete-items-btn').addEventListener('click', function() {
         const tbody = document.querySelector('table tbody');
         const checkboxes = tbody.querySelectorAll('input[type="checkbox"]:checked');
 
-        checkboxes.forEach(checkbox => {
-            checkbox.closest('tr').remove();
+        checkboxes.forEach((checkbox) => {
+            const row = checkbox.closest('tr');
+            const productCode = row.cells[5].textContent;
+            allProducts = allProducts.filter((product) => product.product_code !== productCode);
+            row.remove();
         });
 
-        // ถ้าไม่มีแถวข้อมูลเหลือ ให้เพิ่มแถว "ไม่พบข้อมูลสินค้า"
         if (tbody.querySelectorAll('tr').length === 0) {
             const noDataRow = document.createElement('tr');
             noDataRow.innerHTML = `<td colspan="7">ไม่พบข้อมูลสินค้า</td>`;
             tbody.appendChild(noDataRow);
         }
 
-        // เอาเครื่องหมายถูกใน checkbox ที่หัวตารางออก
         document.getElementById('select-all').checked = false;
-
-        // อัปเดตผลรวมราคา
         calculateTotalPrice();
         updateTotalItemsAndQuantity();
     });
 
-    // การค้นหาสินค้า
+    // ตัวแปรเก็บสินค้าทั้งหมด
+    let allProducts = [];
+
     document.getElementById('search-box').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             const searchValue = this.value.trim();
 
             if (searchValue) {
-                fetch('', { // ส่งไปที่ไฟล์เดียวกัน
+                fetch('', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded'
@@ -294,60 +405,43 @@ if (isset($_POST['search'])) {
                     .then(data => {
                         if (data.success) {
                             const product = data.product;
-                            addProductToTable(product);
+
+                            // ตรวจสอบว่ามีสินค้านี้อยู่แล้วในตารางหรือไม่
+                            const tbody = document.querySelector('table tbody');
+                            const existingCodes = Array.from(tbody.querySelectorAll(
+                                    'input[name="product_code"]'))
+                                .map(input => input.value);
+
+                            if (existingCodes.includes(product.product_code)) {
+                                alert('มีข้อมูลสินค้านี้อยู่แล้ว');
+                            } else {
+                                let maxQuantity = parseInt(product.quantity);
+                                showCustomPrompt(`กรุณาใส่จำนวนสินค้า (มี ${maxQuantity} ชิ้นในสต็อก)`,
+                                    maxQuantity,
+                                    function(quantityValue) {
+                                        if (quantityValue !== null) {
+                                            product.quantity = quantityValue;
+                                            addProductToTable(product);
+                                            allProducts.push(product);
+                                        }
+                                    });
+                            }
                         } else {
                             alert(data.message);
                         }
-                        document.getElementById('search-box').value = ''; // Clear the input
+                        document.getElementById('search-box').value = '';
                     })
                     .catch(error => console.error('Error:', error));
             }
         }
     });
 
-    document.getElementById('cut-stock-btn').addEventListener('click', function() {
-        const tbody = document.querySelector('table tbody');
-        const rows = tbody.querySelectorAll('tr');
-        const productsToUpdate = [];
-
-        rows.forEach(row => {
-            const productCode = row.cells[5].textContent; // รหัสสินค้า (คอลัมน์ที่ 6 - index 5)
-            productsToUpdate.push(productCode);
-        });
-
-        if (productsToUpdate.length === 0) {
-            alert('ไม่มีสินค้าที่จะตัดสต็อก');
-            return;
-        }
-
-        // แสดง Alert เพื่อยืนยันการตัดสต็อก
-        if (confirm('คุณต้องการตัดสต็อกสินค้าทั้งหมดนี้ใช่หรือไม่?')) {
-            // ส่งข้อมูลไปยังเซิร์ฟเวอร์ผ่าน fetch
-            fetch('cut_stock.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        products: productsToUpdate
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('ตัดสต็อกเรียบร้อยแล้ว');
-                        tbody.innerHTML = '<tr><td colspan="7">ไม่พบข้อมูลสินค้า</td></tr>';
-                        updateTotalItemsAndQuantity();
-                        calculateTotalPrice();
-                    } else {
-                        alert('เกิดข้อผิดพลาดในการตัดสต็อก');
-                    }
-                })
-                .catch(error => console.error('Error:', error));
+    document.getElementById('custom-prompt-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            document.getElementById('custom-prompt-ok').click();
         }
     });
     </script>
-
 </body>
 
 </html>

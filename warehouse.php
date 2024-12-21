@@ -54,7 +54,7 @@ $sticker_styles = [
         font-family: Arial, sans-serif;
         background-color: #f9f9f9;
         margin: 0;
-        padding: 20px;
+        padding: 0px 20px 10px 20px;
     }
 
     .container {
@@ -89,7 +89,7 @@ $sticker_styles = [
         transform: translateY(-160%);
         font-size: 18px;
         color: #aaa;
-        top: 25vh;
+        top: 23vh;
         padding-bottom: 2px;
     }
 
@@ -152,7 +152,7 @@ $sticker_styles = [
 <body>
     <div class="container">
         <div class="search-container">
-            <input type="text" id="search-box" placeholder="ค้นหาสินค้า...">
+            <input type="text" id="search-box" placeholder="ค้นหาชื่อสินค้า/รหัสสินค้า...">
             <i class="fa-solid fa-magnifying-glass"></i>
             <div class="right-section">
                 <div class="dropdown-container">
@@ -255,12 +255,15 @@ $sticker_styles = [
             const categoryCell = row.cells[7];
             const unitCell = row.cells[4];
             const productNameCell = row.cells[2];
+            const productCodeCell = row.cells[1];
             const matchesCategory = selectedCategory === "" || (categoryCell && categoryCell.textContent
                 .trim() === selectedCategory);
             const matchesUnit = selectedUnit === "" || (unitCell && unitCell.textContent.trim() ===
                 selectedUnit);
-            const matchesSearch = searchQuery === "" || (productNameCell && productNameCell.textContent.trim()
-                .toLowerCase().includes(searchQuery));
+            const matchesSearch = searchQuery === "" ||
+                (productNameCell && productNameCell.textContent.trim().toLowerCase().includes(searchQuery)) ||
+                (productCodeCell && productCodeCell.textContent.trim().toLowerCase().includes(
+                searchQuery));
 
             return matchesCategory && matchesUnit && matchesSearch;
         });

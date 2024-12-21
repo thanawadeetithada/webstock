@@ -259,8 +259,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
         font-family: Arial, sans-serif;
         background-color: #f9f9f9;
         margin: 0;
-        padding: 20px;
-        overflow: scroll;
+        padding:  0px 20px 10px 20px;
     }
 
     ::-webkit-scrollbar {
@@ -271,7 +270,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
         max-width: 80%;
         margin: auto;
         background: #fff;
-        padding: 2.5rem 2.5rem 0.2rem 2.5rem;
+        padding: 0.2rem 2.5rem 0.2rem 2.5rem;
         border-radius: 8px;
         box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.1);
         margin-top: 6.5rem;
@@ -279,8 +278,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
 
     h2 {
         text-align: center;
-        margin-top: 1rem;
-        margin-bottom: 2.5rem;
+        margin-top: 1.5rem;
+        margin-bottom: 0.5rem;
         font-weight: bold;
     }
 
@@ -364,17 +363,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     }
 
     .form-container .submit-button button {
-        margin: 1rem;
+        margin-right: 1rem;
     }
 
     .form-container {
         background: #cfd8e5;
         padding: 2rem 2rem 1rem 2rem;
         border-radius: 10px;
-        margin: 1.5rem 0 3rem 0;
+        margin: 1.5rem 0 1.3rem 0;
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
+        gap: 0.5rem;
         justify-content: center;
     }
 
