@@ -325,8 +325,8 @@ if (isset($_POST['search'])) {
         <input type="hidden" name="shelf_life" value="${product.shelf_life}">
         <input type="hidden" name="sticker_color" value="${product.sticker_color}">
         <input type="hidden" name="reminder_date" value="${product.reminder_date}">
-        <input type="hidden" name="receive_date" value="${product.receive_date}">
-        <input type="hidden" name="expiry_date" value="${product.expiry_date}">
+        <input type="hidden" name="received_date" value="${product.received_date}">
+        <input type="hidden" name="expiration_date" value="${product.expiration_date}">
         <input type="hidden" name="unit_cost" value="${product.unit_cost}">
         <input type="hidden" name="sender_code" value="${product.sender_code}">
         <input type="hidden" name="sender_company" value="${product.sender_company}">
@@ -341,6 +341,7 @@ if (isset($_POST['search'])) {
     }
 
     document.getElementById('payment-btn').addEventListener('click', function(event) {
+        event.preventDefault();
         if (allProducts.length === 0) {
             alert('กรุณาค้นหาสินค้าก่อนชำระเงิน');
             event.preventDefault();
@@ -349,15 +350,11 @@ if (isset($_POST['search'])) {
 
         // เก็บข้อมูลทั้งหมดในฟิลด์ hidden
         document.getElementById('products-input').value = JSON.stringify(allProducts);
-
-        // คำนวณราคาทั้งหมด
-        const totalPrice = allProducts.reduce((sum, product) => {
-            const quantity = parseInt(product.quantity || 0);
-            const unitPrice = parseFloat(product.unit_price || 0);
-            return sum + (quantity * unitPrice);
-        }, 0);
-
+        const totalPrice = allProducts.reduce((sum, product) => sum + product.quantity * product.unit_price, 0);
         document.getElementById('total-price-input').value = totalPrice.toFixed(2);
+
+        // ส่งฟอร์ม
+        document.getElementById('payment-form').submit();
     });
 
     document.getElementById('delete-items-btn').addEventListener('click', function() {

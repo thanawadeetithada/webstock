@@ -322,7 +322,7 @@ if (isset($_POST['search'])) {
         <td>${product.quantity}</td>
          <td>${product.unit_price}</td>
          <td>${product.product_code}</td>
-         <td>${product.expiry_date}</td>
+         <td>${product.expiration_date}</td>
 
         <input type="hidden" name="unit" value="${product.unit}">
         <input type="hidden" name="product_model" value="${product.product_model}">
@@ -330,7 +330,7 @@ if (isset($_POST['search'])) {
         <input type="hidden" name="shelf_life" value="${product.shelf_life}">
         <input type="hidden" name="sticker_color" value="${product.sticker_color}">
         <input type="hidden" name="reminder_date" value="${product.reminder_date}">
-        <input type="hidden" name="receive_date" value="${product.receive_date}">
+        <input type="hidden" name="received_date" value="${product.received_date}">
         <input type="hidden" name="unit_cost" value="${product.unit_cost}">
         <input type="hidden" name="sender_code" value="${product.sender_code}">
         <input type="hidden" name="sender_company" value="${product.sender_company}">

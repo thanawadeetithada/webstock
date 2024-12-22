@@ -1,44 +1,39 @@
 <?php
-session_start();
 include 'config.php';
 
-$year = isset($_GET['year']) ? intval($_GET['year']) : '';
-$month = isset($_GET['month']) ? intval($_GET['month']) : '';
+$year = isset($_GET['year']) ? intval($_GET['year']) : null;
+$month = isset($_GET['month']) ? intval($_GET['month']) : null;
 
-$sql_category = "SELECT category,
-                        SUM(CASE WHEN status = 'sell' THEN 1 ELSE 0 END) AS sell_count,
-                        SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) AS expired_count
-                 FROM products
-                 WHERE status IN ('sell', 'expired')";
-
-if (!empty($year)) {
-    $sql_category .= " AND YEAR(expiry_date) = $year";
+// เงื่อนไขการกรองตาม year และ month
+$whereClauses = [];
+if ($year) {
+    $whereClauses[] = "YEAR(expiration_date) = $year";
 }
 
-if (!empty($month)) {
-    $sql_category .= " AND MONTH(expiry_date) = $month";
+if ($month) {
+    $whereClauses[] = "MONTH(expiration_date) = $month";
 }
 
-$sql_category .= " GROUP BY category";
+$whereSQL = $whereClauses ? 'WHERE ' . implode(' AND ', $whereClauses) : '';
 
-$result_category = $conn->query($sql_category);
+// Query สำหรับดึงข้อมูลใหม่
+$expiration_data_sql = "
+    SELECT category, COUNT(*) AS total
+    FROM products
+    $whereSQL
+    GROUP BY category
+";
 
-$categories = [];
-$sell_counts = [];
-$expired_counts = [];
+$result = $conn->query($expiration_data_sql);
 
-if ($result_category && $result_category->num_rows > 0) {
-    while ($row = $result_category->fetch_assoc()) {
-        $categories[] = $row['category'];
-        $sell_counts[] = $row['sell_count'];
-        $expired_counts[] = $row['expired_count'];
-    }
+$expiration_data = [];
+while ($row = $result->fetch_assoc()) {
+    $expiration_data[$row['category']] = $row['total'];
 }
 
-header('Content-Type: application/json');
+// ส่งข้อมูล JSON กลับไปยัง JavaScript
 echo json_encode([
-    'categories' => $categories,
-    'sell_counts' => $sell_counts,
-    'expired_counts' => $expired_counts,
+    'categories' => array_keys($expiration_data),
+    'sell_totals' => array_values($expiration_data), // ตัวอย่างสำหรับกราฟ
+    'expiration_totals' => array_values($expiration_data),
 ]);
-?>

@@ -21,8 +21,9 @@ $result_category = $conn->query($sql_category);
 $sql_unit = "SELECT DISTINCT unit FROM products";
 $result_unit = $conn->query($sql_unit);
 
-$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, category 
-        FROM products WHERE status = 'active'";
+$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiration_date, sticker_color, category 
+        FROM products WHERE expiration_date >= CURRENT_DATE";
+
 $result = $conn->query($sql);
 
 $sticker_styles = [
@@ -220,7 +221,7 @@ $sticker_styles = [
                         echo "<td>" . $row['quantity'] . "</td>";
                         echo "<td>" . $row['unit'] . "</td>";
                         echo "<td><button style='width: 100%; $sticker_style' disabled>" . $sticker_color . "</button></td>";
-                        echo "<td>" . $row['expiry_date'] . "</td>";
+                        echo "<td>" . $row['expiration_date'] . "</td>";
                         echo "<td>" . $row['category'] . "</td>";
                         echo "</tr>";
                     }

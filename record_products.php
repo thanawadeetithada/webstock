@@ -1,166 +1,14 @@
 <?php
-ob_start();
 session_start();
+if (!isset($_POST['search'])) {
+    include 'include/header.php';
+}
 include 'config.php';
 
-$user_logged_in = isset($_SESSION['username']) ? $_SESSION['username'] : null;
-
-if (isset($_POST['logout'])) {
-    session_destroy();
+if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
-    exit();
+    exit;
 }
-
-if (isset($_GET['action']) && $_GET['action'] === 'check_duplicate' && isset($_GET['product_code'])) {
-    header('Content-Type: application/json');
-    $product_code = $_GET['product_code'];
-
-    $check_sql = "SELECT product_code FROM products WHERE product_code = ?";
-    $stmt_check = $conn->prepare($check_sql);
-    $stmt_check->bind_param("s", $product_code);
-    $stmt_check->execute();
-    $stmt_check->store_result();
-
-    if ($stmt_check->num_rows > 0) {
-        echo json_encode(['exists' => true]);
-    } else {
-        echo json_encode(['exists' => false]);
-    }
-
-    $stmt_check->close();
-    $conn->close();
-    exit();
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
-    $product_code = $_POST['product_code'];
-
-    $delete_sql = "DELETE FROM products WHERE product_code = ?";
-    $stmt_delete = $conn->prepare($delete_sql);
-    $stmt_delete->bind_param("s", $product_code);
-
-    if ($stmt_delete->execute()) {
-        echo "ลบข้อมูลสำเร็จ";
-    } else {
-        echo "เกิดข้อผิดพลาดในการลบข้อมูล: " . $stmt_delete->error;
-    }
-
-    $stmt_delete->close();
-    $conn->close();
-    exit();
-}
-
-if (isset($_GET['action']) && $_GET['action'] === 'fetch') {
-    $search = isset($_GET['query']) ? $_GET['query'] : '';
-
-    $sql = "SELECT product_code, product_name, product_model, production_date, shelf_life, expiry_date, sticker_color, reminder_date, received_date, quantity, unit, unit_cost, sender_code, sender_company, recorder, unit_price, category FROM products WHERE product_code LIKE ? OR product_name LIKE ?";
-    $stmt = $conn->prepare($sql);
-
-    if (!$stmt) {
-        echo json_encode(["error" => "SQL error: " . $conn->error]);
-        exit();
-    }
-
-    $search_param = '%' . $search . '%';
-    $stmt->bind_param('ss', $search_param, $search_param);
-
-    if (!$stmt->execute()) {
-        echo json_encode(["error" => "Execution error: " . $stmt->error]);
-        exit();
-    }
-
-    $result = $stmt->get_result();
-
-    $data = [];
-    while ($row = $result->fetch_assoc()) {
-        $data[] = $row;
-    }
-
-    echo json_encode($data);
-    $stmt->close();
-    $conn->close();
-    exit();
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
-    $product_code = $_POST['product_code'];
-    $product_name = $_POST['product_name'];
-    $product_model = $_POST['product_model'];
-    $production_date = $_POST['production_date'];
-    $shelf_life = $_POST['shelf_life'];
-    $expiry_date = $_POST['expiry_date'];
-    $sticker_color = $_POST['sticker_color'];
-    $reminder_date = $_POST['reminder_date'];
-    $received_date = $_POST['received_date'];
-    $quantity = $_POST['quantity'];
-    $unit = $_POST['unit'];
-    $unit_cost = $_POST['unit_cost'];
-    $sender_code = $_POST['sender_code'];
-    $sender_company = $_POST['sender_company'];
-    $recorder = $_POST['recorder'];
-    $unit_price = $_POST['unit_price'];
-    $category = $_POST['category'];
-
-    $check_sql = "SELECT * FROM products WHERE product_code = ?";
-    $stmt_check = $conn->prepare($check_sql);
-    $stmt_check->bind_param("s", $product_code);
-    $stmt_check->execute();
-    $result_check = $stmt_check->get_result();
-
-    if ($result_check->num_rows > 0) {
-        $sql = "UPDATE products SET
-                    product_name = ?, product_model = ?, production_date = ?, shelf_life = ?,
-                    expiry_date = ?, sticker_color = ?, reminder_date = ?, received_date = ?,
-                    quantity = ?, unit = ?, unit_cost = ?, sender_code = ?, sender_company = ?,
-                    recorder = ?, unit_price = ?, category = ?
-                WHERE product_code = ?";
-
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param(
-            "ssssssssisssssdss",
-            $product_name, $product_model, $production_date, $shelf_life, $expiry_date,
-            $sticker_color, $reminder_date, $received_date, $quantity, $unit, $unit_cost,
-            $sender_code, $sender_company, $recorder, $unit_price, $category, $product_code
-        );
-
-        if ($stmt->execute()) {
-            echo "<script>alert('แก้ไขข้อมูลสำเร็จ');</script>";
-        } else {
-            echo "<script>alert('เกิดข้อผิดพลาด: " . $stmt->error . "');</script>";
-        }
-
-        $stmt->close();
-    } else {
-
-        $sql = "INSERT INTO products (
-    product_code, product_name, product_model, production_date, shelf_life,
-    expiry_date, sticker_color, reminder_date, received_date, quantity,
-    unit, unit_cost, sender_code, sender_company, recorder, unit_price, category
-) VALUES (
-    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-)";
-
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param(
-            "ssssssssisssssdss",
-            $product_code, $product_name, $product_model, $production_date, $shelf_life,
-            $expiry_date, $sticker_color, $reminder_date, $received_date, $quantity,
-            $unit, $unit_cost, $sender_code, $sender_company, $recorder, $unit_price, $category
-        );
-
-        if ($stmt->execute()) {
-            echo "<script>alert('เพิ่มข้อมูลสำเร็จ');</script>";
-        } else {
-            echo "<script>alert('เกิดข้อผิดพลาด: " . $stmt->error . "');</script>";
-        }
-
-        $stmt->close();
-    }
-
-    $stmt_check->close();
-    $conn->close();
-}
-
 ?>
 
 <!DOCTYPE html>
@@ -173,93 +21,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     <title>บันทึกข้อมูลสินค้า</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-    .header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background-color: #222222;
-        padding: 20px;
-        height: 8vh;
-        width: 100vw;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 10;
-    }
-
-    button {
-        background-color: transparent;
-        padding: 0px;
-        border: 0px;
-        color: white;
-        outline: none !important;
-    }
-
-    i {
-        font-size: 1.5rem;
-    }
-
-    span {
-        font-size: larger;
-    }
-
-    .right-section {
-        display: flex;
-    }
-
-    .sidebar {
-        position: fixed;
-        top: 8vh;
-        left: -250px;
-        width: 250px;
-        height: 92vh;
-        background-color: #333;
-        color: white;
-        padding-top: 20px;
-        transition: 0.3s;
-        z-index: 9;
-    }
-
-    .sidebar a {
-        display: block;
-        padding: 10px 15px;
-        text-decoration: none;
-        color: white;
-        font-size: 16px;
-        border-bottom: 1px solid #444;
-    }
-
-    .sidebar a:hover {
-        background-color: #BFBBBA;
-        color: #333;
-    }
-
-    .sidebar-btn {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        color: white;
-    }
-
-    .menu-btn {
-        font-size: 1.5rem;
-    }
-
-    .content {
-        transition: margin-left .3s;
-        padding: 20px;
-        height: 92vh;
-        margin-top: 8vh;
-    }
-
-    /* header */
     body {
         font-family: Arial, sans-serif;
         background-color: #f9f9f9;
         margin: 0;
-        padding:  0px 20px 10px 20px;
+        padding: 0px 20px 10px 20px;
     }
 
     ::-webkit-scrollbar {
@@ -390,9 +156,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
         width: 90%;
     }
 
-    .form-row input,
-    .form-row select {
+    .form-row input {
         padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        flex-shrink: 1;
+        width: 90%;
+    }
+
+    .form-row select {
+        padding: 13px;
         margin-bottom: 10px;
         border-radius: 5px;
         border: 1px solid #ccc;
@@ -446,43 +220,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
         margin-top: 10px;
         margin-bottom: 10px;
     }
+
+    .delete-row,
+    .warning-row {
+        width: 50%;
+    }
     </style>
 </head>
 
 <body>
-    <header class="header">
-        <div class="left-section">
-            <button type="button" class="menu-btn" id="menu-toggle">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-        </div>
-        <div class="right-section">
-            <button type="button">
-                <i class="fas fa-user mr-3"></i>
-            </button>
-            <form action="" method="POST">
-                <button type="submit" name="logout">
-                    <i class="fa-solid fa-lock mr-2"></i><span>Log Out</span>
-                </button>
-            </form>
-        </div>
-    </header>
-    <div id="sidebar" class="sidebar">
-        <a href="main.php">หน้าหลัก</a>
-        <a href="sell_products.php">ขายสินค้า</a>
-        <a href="record_products.php">บันทึกข้อมูลสินค้า</a>
-        <a href="warehouse.php">คลังสินค้า</a>
-        <a href="product_expired.php">ค้นหาสินค้าหมดอายุ</a>
-        <a href="waste_stock.php">ตัดของเสียจากสต็อก</a>
-        <a href="report_stock.php">รายงานสินค้าที่ตัดออกจากสต็อก</a>
-        <a href="waste_chart.php">สถิติของเสีย</a>
-        <a href="generate_QR.php">สร้างบาร์โค้ด</a>
-    </div>
-
     <div class="container">
         <h2>ข้อมูลสินค้า</h2>
         <div class="button-group">
-            <button class="delete-button">
+            <button id="delete-Button" class="delete-button">
                 <i class="fa-solid fa-trash"></i>ลบข้อมูล
             </button>
             <!-- <button class="add-button">
@@ -495,12 +245,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                     นำเข้าข้อมูลสินค้า
                 </button>
             </div>
-            <button class="edit-button">
+            <button id="edit-Button" class="edit-button">
                 <i class="fa-regular fa-pen-to-square"></i>แก้ไขข้อมูล
             </button>
         </div>
-
-        <form action="record_products.php" method="POST" class="form-container" id="productForm">
+        <form class="form-container" id="productForm">
             <div class="form-row">
                 <label>รหัสสินค้า</label>
                 <input type="text" id="product_code" name="product_code" required>
@@ -522,40 +271,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                 <input type="number" id="shelf_life" name="shelf_life" required>
             </div>
             <div class="form-row">
-                <label for="expiry_date">วันหมดอายุ</label>
-                <input type="date" id="expiry_date" name="expiry_date" required>
+                <label for="expiration_date">วันหมดอายุ</label>
+                <input type="date" id="expiration_date" name="expiration_date" required>
             </div>
-            <div class="form-row" style="position: relative; display: inline-block;">
-                <label for="sticker_color" style="margin-right: 10px; margin-left: 5%;">สีสติ๊กเกอร์</label>
-                <div style="position: relative; width: 100%;">
-                    <input type="text" id="sticker_color" name="sticker_color" required
-                        style="padding-right: 30px; width: 90%; box-sizing: border-box; margin-left: 5%; margin-right: 10px">
-                    <i class="fa fa-info-circle" id="hint-icon"
-                        style="position: absolute; top: 40%; right: 35px; transform: translateY(-50%); cursor: pointer; color: #666;"></i>
-                </div>
-                <div id="hint-box"
-                    style="display: none; background: #f9f9f9; border: 1px solid #ccc; padding: 10px; border-radius: 5px; position: absolute; left: 60%; max-width: 300px; font-size: 14px;">
-                    <ul style="list-style: none; padding-left: 10px; margin: 0;">
-                        <li><span style="background-color: #E3D200; color: #000;">หมดอายุเดือน 1</span></li>
-                        <li><span style="background-color: #00C4B4; color: #fff;">หมดอายุเดือน 2</span></li>
-                        <li><span style="background-color: #EE700E; color: #fff;">หมดอายุเดือน 3</span></li>
-                        <li><span style="background-color: #EA12B1; color: #fff;">หมดอายุเดือน 4</span></li>
-                        <li><span style="background-color: #C8E9F0; color: #000;">หมดอายุเดือน 5</span></li>
-                        <li><span style="background-color: #02A737; color: #fff;">หมดอายุเดือน 6</span></li>
-                        <li><span style="background-color: #EAEAA2; color: #000;">หมดอายุเดือน 7</span></li>
-                        <li><span style="background-color: #00A1CD; color: #fff;">หมดอายุเดือน 8</span></li>
-                        <li><span style="background-color: #AA7964; color: #fff;">หมดอายุเดือน 9</span></li>
-                        <li><span style="background-color: #F4D3DC; color: #000;">หมดอายุเดือน 10</span></li>
-                        <li><span style="background-color: #B9F4A2; color: #000;">หมดอายุเดือน 11</span></li>
-                        <li><span style="background-color: #FFFFFF; color: #000; border: 1px solid #ccc;">หมดอายุเดือน
-                                12</span></li>
-                        <li><span style="background-color: #999999; color: #fff;">ไม่มีวันหมดอายุ</span></li>
-                    </ul>
-                </div>
+            <div class="form-row">
+                <label for="sticker_color">สีสติ๊กเกอร์</label>
+                <select id="sticker_color" name="sticker_color" required>
+                    <option value="" disabled selected>เลือกสีสติ๊กเกอร์</option>
+                    <option value="หมดอายุเดือน 1" style="background-color: #E3D200; color: #000;">หมดอายุเดือน 1
+                    </option>
+                    <option value="หมดอายุเดือน 2" style="background-color: #00C4B4; color: #fff;">หมดอายุเดือน 2
+                    </option>
+                    <option value="หมดอายุเดือน 3" style="background-color: #EE700E; color: #fff;">หมดอายุเดือน 3
+                    </option>
+                    <option value="หมดอายุเดือน 4" style="background-color: #EA12B1; color: #fff;">หมดอายุเดือน 4
+                    </option>
+                    <option value="หมดอายุเดือน 5" style="background-color: #C8E9F0; color: #000;">หมดอายุเดือน 5
+                    </option>
+                    <option value="หมดอายุเดือน 6" style="background-color: #02A737; color: #fff;">หมดอายุเดือน 6
+                    </option>
+                    <option value="หมดอายุเดือน 7" style="background-color: #EAEAA2; color: #000;">หมดอายุเดือน 7
+                    </option>
+                    <option value="หมดอายุเดือน 8" style="background-color: #00A1CD; color: #fff;">หมดอายุเดือน 8
+                    </option>
+                    <option value="หมดอายุเดือน 9" style="background-color: #AA7964; color: #fff;">หมดอายุเดือน 9
+                    </option>
+                    <option value="หมดอายุเดือน 10" style="background-color: #F4D3DC; color: #000;">หมดอายุเดือน 10
+                    </option>
+                    <option value="หมดอายุเดือน 11" style="background-color: #B9F4A2; color: #000;">หมดอายุเดือน 11
+                    </option>
+                    <option value="หมดอายุเดือน 12"
+                        style="background-color: #FFFFFF; color: #000; border: 1px solid #ccc;">หมดอายุเดือน 12
+                    </option>
+                    <option value="ไม่มีวันหมดอายุ" style="background-color: #999999; color: #fff;">ไม่มีวันหมดอายุ
+                    </option>
+                </select>
             </div>
             <div class="form-row">
                 <label for="reminder_date">เตือนล่วงหน้า</label>
-                <input type="date" id="reminder_date" name="reminder_date" required>
+                <input type="date" id="reminder_date" name="reminder_date" required disabled>
             </div>
             <div class="form-row">
                 <label for="received_date">วันรับเข้า</label>
@@ -594,9 +348,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                 <input type="text" id="category" name="category" required>
             </div>
             <div class="submit-button">
-                <button type="button" class="btn btn-success" id="confirmButton">บันทึกข้อมูล</button>
+                <button type="button" class="btn btn-primary" id="confirmButton">บันทึกข้อมูล</button>
                 <button type="reset" class="btn btn-secondary" id="resetButton">ล้างข้อมูล</button>
-                <button name="save" class="btn btn-primary" id="saveButton">ยืนยันข้อมูลสินค้า</button>
+                <button type="button" class="btn btn-success" id="saveButton">ยืนยัน</button>
                 <button type="button" class="btn btn-warning" id="editButton">แก้ไข</button>
                 <button type="button" class="btn btn-danger" id="cancelButton">ยกเลิก</button>
             </div>
@@ -613,9 +367,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                         </button>
                     </div>
                     <div class="modal-body">
-                        <input type="text" id="searchProduct" class="form-control mb-3"
+                        <input type="text" id="searchEditProduct" class="form-control mb-3"
                             placeholder="ค้นหาโดยใช้รหัสสินค้า หรือ ชื่อสินค้า...">
-                        <table class="table table-bordered">
+                        <table class="table table-bordered" id="editProductTable" style="display: none;">
                             <thead>
                                 <tr>
                                     <th>รหัสสินค้า</th>
@@ -624,7 +378,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                                     <th>เลือก</th>
                                 </tr>
                             </thead>
-                            <tbody id="productTableBody">
+                            <tbody id="editProductTableBody">
 
                             </tbody>
                         </table>
@@ -646,7 +400,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                     <div class="modal-body">
                         <input type="text" id="searchDeleteProduct" class="form-control mb-3"
                             placeholder="ค้นหาโดยใช้รหัสสินค้า หรือ ชื่อสินค้า...">
-                        <table class="table table-bordered">
+                        <table class="table table-bordered" id="deleteProductTable" style="display: none;">
                             <thead>
                                 <tr>
                                     <th>รหัสสินค้า</th>
@@ -668,328 +422,493 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
-</body>
-<script>
-    const hintIcon = document.getElementById('hint-icon');
-    const hintBox = document.getElementById('hint-box');
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
 
-    // เมื่อคลิกที่ไอคอน ให้แสดงหรือซ่อน Hint Box
-    hintIcon.addEventListener('click', () => {
-        hintBox.style.display = hintBox.style.display === 'none' ? 'block' : 'none';
-    });
-
-    // เมื่อคลิกที่อื่น ให้ซ่อน Hint Box
-    document.addEventListener('click', (event) => {
-        if (!hintBox.contains(event.target) && event.target !== hintIcon) {
-            hintBox.style.display = 'none';
+        function formatDateToInput(dateString) {
+            console.log('date', typeof dateString)
+            if (!dateString) return "";
+            const date = new Date(dateString);
+            if (isNaN(date)) return "";
+            return date.toISOString().split("T")[0];
         }
-    });
 
-document.getElementById("menu-toggle").addEventListener("click", function() {
-    const sidebar = document.getElementById("sidebar");
-    if (sidebar.style.left === "0px") {
-        sidebar.style.left = "-250px";
-    } else {
-        sidebar.style.left = "0";
-    }
-});
+        function resetFormToInitialState() {
+            confirmButton.style.display = "inline-block";
+            resetButton.style.display = "inline-block";
+            saveButton.style.display = "none";
+            editButton.style.display = "none";
+            cancelButton.style.display = "none";
+            confirmButton.disabled = true;
+            resetButton.disabled = true;
 
-$('.edit-button').click(function() {
-    $('#editProductModal').modal('show');
-    $('#productTableBody').empty();
-    $('table').hide();
-});
+            const spans = document.querySelectorAll("#productForm .form-row span");
+            spans.forEach((span) => {
+                const parent = span.parentElement;
+                const input = parent.querySelector("input, select");
 
-$('.delete-button').click(function() {
-    $('#deleteProductModal').modal('show');
-    $('#deleteProductTableBody').empty();
-    $('table').hide();
-});
-
-$('#searchProduct').on('input', function() {
-    let query = $(this).val().trim();
-
-    if (query === '') {
-        $('table').hide();
-        $('#productTableBody').empty();
-    } else {
-        $('table').show();
-        loadProducts(query);
-    }
-});
-
-$('#searchDeleteProduct').on('input', function() {
-    let query = $(this).val().trim();
-
-    if (query === '') {
-        $('table').hide();
-        $('#deleteProductTableBody').empty();
-    } else {
-        $('table').show();
-        loadProducts(query, 'delete');
-    }
-});
-
-function loadProducts(query = '', action = 'edit') {
-    $.ajax({
-        url: 'record_products.php',
-        type: 'GET',
-        data: {
-            query: query,
-            action: 'fetch'
-        },
-        success: function(response) {
-            try {
-                let products = JSON.parse(response);
-                let tableBody = action === 'delete' ? $('#deleteProductTableBody') : $('#productTableBody');
-                tableBody.empty();
-
-                if (products.error) {
-                    alert(products.error);
-                    $('table').hide();
-                    return;
+                if (input) {
+                    span.style.display = "none";
+                    input.style.display = "block";
                 }
+            });
 
-                if (products.length > 0) {
-                    products.forEach(product => {
-                        let buttonHTML = action === 'delete' ?
-                            `<button class="btn btn-danger delete-product" data-product-code="${product.product_code}">ลบ</button>` :
-                            `<button class="btn btn-warning edit-product" data-product='${JSON.stringify(product)}'>แก้ไข</button>`;
+            const form = document.getElementById("productForm");
+            form.reset();
+        }
 
-                        tableBody.append(`
-                            <tr>
+        $('#editProductModal').on('hidden.bs.modal', function() {
+            document.getElementById('searchEditProduct').value = '';
+            document.getElementById('editProductTable').style.display = 'none';
+            document.getElementById('editProductTableBody').innerHTML = '';
+        });
+
+        $('#deleteProductModal').on('hidden.bs.modal', function() {
+            document.getElementById('searchDeleteProduct').value = '';
+            document.getElementById('deleteProductTable').style.display = 'none';
+            document.getElementById('deleteProductTableBody').innerHTML = '';
+        });
+
+
+        const deleteButton = document.getElementById("delete-Button");
+        const deleteProductModal = new bootstrap.Modal(document.getElementById("deleteProductModal"));
+
+        deleteButton.addEventListener("click", function() {
+            deleteProductModal.show();
+        });
+
+        const deleteProductTable = document.getElementById("deleteProductTable");
+        const searchInput = document.getElementById("searchDeleteProduct");
+        const tableBody = document.getElementById("deleteProductTableBody");
+
+        searchInput.addEventListener("input", function() {
+            const query = searchInput.value.trim();
+
+            if (query === "") {
+                deleteProductTable.style.display = "none";
+                tableBody.innerHTML = "";
+                return;
+            }
+
+            // ส่งคำขอ AJAX ไปยัง fetch_products.php
+            fetch(`fetch_products.php?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    tableBody.innerHTML = "";
+
+                    if (data.length > 0) {
+                        data.forEach(product => {
+                            const row = document.createElement("tr");
+                            row.innerHTML = `
+                            <td>${product.product_code}</td>
+                            <td>${product.product_name}</td>
+                            <td>${product.quantity}</td>
+                            <td><button class="btn btn-danger btn-sm delete-row">ลบ</button></td>
+                        `;
+                            tableBody.appendChild(row);
+                        });
+                        deleteProductTable.style.display = "table";
+                    } else {
+                        const noDataRow = document.createElement("tr");
+                        noDataRow.innerHTML = `
+                    <td colspan="4" class="text-center">ไม่พบสินค้า</td>
+                `;
+                        tableBody.appendChild(noDataRow);
+                        deleteProductTable.style.display = "table";
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching data:", error);
+                });
+        });
+
+        tableBody.addEventListener("click", function(event) {
+            if (event.target.classList.contains("delete-row")) {
+                const row = event.target.closest("tr");
+                const productCode = row.querySelector("td").textContent;
+
+                if (confirm(`คุณต้องการลบสินค้า ${productCode} หรือไม่?`)) {
+                    fetch("delete_product.php", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                product_code: productCode
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert("ลบสินค้าสำเร็จ!");
+                                row.remove();
+                            } else {
+                                alert("เกิดข้อผิดพลาดในการลบสินค้า");
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error deleting product:", error);
+                        });
+                }
+            }
+        });
+
+        const edit_Button = document.getElementById("edit-Button");
+        const editProductModal = new bootstrap.Modal(document.getElementById("editProductModal"));
+
+        edit_Button.addEventListener("click", function() {
+            editProductModal.show();
+        });
+
+        const editProductTable = document.getElementById("editProductTable");
+        const searchEditInput = document.getElementById("searchEditProduct");
+        const edittableBody = document.getElementById("editProductTableBody");
+
+        searchEditInput.addEventListener("input", function() {
+            const query = searchEditInput.value.trim();
+
+            if (query === "") {
+                editProductTable.style.display = "none";
+                edittableBody.innerHTML = "";
+                return;
+            }
+
+            // ส่งคำขอ AJAX ไปยัง fetch_products.php
+            fetch(`fetch_products.php?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    edittableBody.innerHTML = "";
+
+                    if (data.length > 0) {
+                        data.forEach(product => {
+                            const row = document.createElement("tr");
+                            row.innerHTML =
+                                `
                                 <td>${product.product_code}</td>
-                                <td>${product.product_name}</td>
-                                <td>${product.quantity}</td>
-                                <td>${buttonHTML}</td>
-                            </tr>
-                        `);
-                    });
-                    $('table').show();
+                            <td>${product.product_name}</td>
+                            <td>${product.quantity}</td>
+                            <input type="hidden" name="product_model" value="${product.product_model}">
+                            <input type="hidden" name="production_date" value="${product.production_date}">
+                            <input type="hidden" name="shelf_life" value="${product.shelf_life}">
+                            <input type="hidden" name="expiration_date" value="${product.expiration_date}">
+                            <input type="hidden" name="sticker_color" value="${product.sticker_color}">
+                            <input type="hidden" name="reminder_date" value="${product.reminder_date}">
+                            <input type="hidden" name="received_date" value="${product.received_date}">
+                            <input type="hidden" name="unit" value="${product.unit}">
+                            <input type="hidden" name="unit_cost" value="${product.unit_cost}">
+                            <input type="hidden" name="unit_price" value="${product.unit_price}">
+                            <input type="hidden" name="sender_code" value="${product.sender_code}">
+                            <input type="hidden" name="sender_company" value="${product.sender_company}">
+                            <input type="hidden" name="recorder" value="${product.recorder}">
+                            <input type="hidden" name="category" value="${product.category}">
+                            <input type="hidden" name="status" value="${product.status}">
+                            <td><button class="btn btn-warning btn-sm warning-row" data-code="${product.product_code}">แก้ไข</button></td>`;
+                            edittableBody.appendChild(row);
+                        });
+                        editProductTable.style.display = "table";
+                    } else {
+                        const noDataRow = document.createElement("tr");
+                        noDataRow.innerHTML =
+                            `<td colspan="4" class="text-center">ไม่พบสินค้า</td>`;
+                        edittableBody.appendChild(noDataRow);
+                        editProductTable.style.display = "table";
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching data:", error);
+                });
+        });
+
+        edittableBody.addEventListener("click", function(event) {
+            if (event.target.classList.contains("warning-row")) {
+                const row = event.target.closest("tr");
+                const productCode = row.children[0].textContent;
+                const productName = row.children[1].textContent;
+                const quantity = row.children[2].textContent;
+
+                const hiddenInputs = row.querySelectorAll('input[type="hidden"]');
+                const hiddenData = {};
+
+                hiddenInputs.forEach(input => {
+                    hiddenData[input.name] = input.value.trim();
+                });
+
+                document.getElementById("product_code").value = productCode;
+                document.getElementById("product_name").value = productName;
+                document.getElementById("quantity").value = quantity;
+
+                Object.keys(hiddenData).forEach(key => {
+                    const inputField = document.getElementById(key);
+                    if (inputField && inputField.type === "date") {
+                        inputField.value = formatDateToInput(hiddenData[
+                        key]); 
+                    } else if (inputField) {
+                        inputField.value = hiddenData[key];
+                    }
+                });
+
+                const formElements = document.querySelectorAll(
+                    "#productForm .form-row input, #productForm .form-row select");
+                formElements.forEach(element => {
+                    if (element.hasAttribute("disabled")) {
+                        element.disabled = true;
+                    } else {
+                        element.disabled = false;
+                    }
+                });
+
+                confirmButton.disabled = false;
+                resetButton.disabled = false;
+                editProductModal.hide();
+            }
+        });
+
+        document.getElementById("saveButton").addEventListener("click", function(event) {
+            event.preventDefault();
+
+            const form = document.getElementById("productForm");
+            const formData = new FormData(form);
+            const productData = {};
+            formData.forEach((value, key) => {
+                productData[key] = value;
+            });
+
+            fetch("save_product.php", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(productData),
+                })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    if (data.success) {
+                        if (data.exists) {
+                            alert("แก้ไขสำเร็จแล้ว!");
+                        } else {
+                            alert("บันทึกสำเร็จแล้ว!");
+                        }
+                        resetFormToInitialState();
+                    } else {
+                        alert("Error: " + data.message);
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    alert("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+                });
+        });
+
+
+        document.getElementById("confirmButton").addEventListener("click", function(event) {
+            event.preventDefault();
+
+            const formElements = document.querySelectorAll(
+                "#productForm .form-row input, #productForm .form-row select");
+
+            formElements.forEach((element) => {
+                const parent = element.parentElement;
+                if (element.disabled) {
+                    const span = document.createElement("span");
+                    span.textContent = element.value;
+                    span.style.display = "block";
+                    span.style.padding = "9px";
+                    span.style.marginBottom = "10px";
+                    span.style.border = "1px solid #ccc";
+                    span.style.borderRadius = "5px";
+                    span.style.backgroundColor = "#f9f9f9";
+                    span.style.cursor = "default";
+                    span.style.width = "90%";
+                    span.style.display = "none";
+                    parent.insertBefore(span, element);
                 } else {
-                    tableBody.append(`
-                        <tr>
-                            <td colspan="4" class="text-center text-danger">ไม่พบรายการ</td>
-                        </tr>
-                    `);
-                    $('table').show();
+                    const span = document.createElement("span");
+                    span.textContent = element.value;
+                    span.style.display = "block";
+                    span.style.padding = "10px";
+                    span.style.marginBottom = "10px";
+                    span.style.border = "1px solid #ccc";
+                    span.style.borderRadius = "5px";
+                    span.style.backgroundColor = "#EFEFEF4D";
+                    span.style.cursor = 'default';
+                    span.style.width = '90%';
+
+                    element.style.display = "none";
+                    parent.appendChild(span);
                 }
+            });
+        });
 
-                $('.edit-product').off('click').on('click', function() {
-                    let product = $(this).data('product');
-                    populateForm(product);
-                    $('#editProductModal').modal('hide');
-                });
+        document.getElementById("editButton").addEventListener("click", function(event) {
+            event.preventDefault();
+            const spans = document.querySelectorAll("#productForm .form-row span");
+            spans.forEach((span) => {
+                const parent = span.parentElement;
+                const input = parent.querySelector("input, select");
 
-                $('.delete-product').off('click').on('click', function() {
-                    let productCode = $(this).data('product-code');
-                    deleteProduct(productCode);
-                });
+                if (input) {
+                    span.style.display = "none";
+                    input.style.display = "block";
+                }
+            });
+        });
 
-            } catch (e) {
-                alert('เกิดข้อผิดพลาดในการแปลงข้อมูล: ' + e.message);
-                $('table').hide();
-            }
-        },
-        error: function(xhr, status, error) {
-            alert('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + error);
-            $('table').hide();
+        document.getElementById("cancelButton").addEventListener("click", function(event) {
+
+            event.preventDefault();
+            const spans = document.querySelectorAll("#productForm .form-row span");
+            spans.forEach((span) => {
+                const parent = span.parentElement;
+                const input = parent.querySelector("input, select");
+
+                if (input) {
+                    span.style.display = "none";
+                    input.style.display = "block";
+                }
+            });
+
+            const form = document.getElementById("productForm");
+            form.reset();
+        });
+
+        const confirmButton = document.getElementById("confirmButton");
+        const resetButton = document.getElementById("resetButton");
+        const saveButton = document.getElementById("saveButton");
+        const editButton = document.getElementById("editButton");
+        const cancelButton = document.getElementById("cancelButton");
+        const formElements = document.querySelectorAll(
+            "#productForm .form-row input, #productForm .form-row select");
+
+        confirmButton.disabled = true;
+        resetButton.disabled = true;
+        saveButton.style.display = "none";
+        editButton.style.display = "none";
+        cancelButton.style.display = "none";
+
+        const checkFormCompletion = () => {
+            let allFilled = true;
+            formElements.forEach((element) => {
+                if (!element.disabled && element.value.trim() === "") {
+                    allFilled = false;
+                }
+            });
+            confirmButton.disabled = !allFilled;
+        };
+
+        formElements.forEach((element) => {
+            element.addEventListener("input", () => {
+                resetButton.disabled = false;
+                checkFormCompletion();
+            });
+        });
+
+        confirmButton.addEventListener("click", () => {
+            confirmButton.style.display = "none";
+            resetButton.style.display = "none";
+            saveButton.style.display = "inline-block";
+            editButton.style.display = "inline-block";
+            cancelButton.style.display = "inline-block";
+        });
+
+        resetButton.addEventListener("click", () => {
+            confirmButton.disabled = true;
+            resetButton.disabled = true;
+
+            const form = document.getElementById("productForm");
+            form.reset();
+        });
+
+        editButton.addEventListener("click", () => {
+            confirmButton.style.display = "inline-block";
+            resetButton.style.display = "inline-block";
+            saveButton.style.display = "none";
+            editButton.style.display = "none";
+            cancelButton.style.display = "none";
+        });
+
+        cancelButton.addEventListener("click", () => {
+            confirmButton.style.display = "inline-block";
+            resetButton.style.display = "inline-block";
+            saveButton.style.display = "none";
+            editButton.style.display = "none";
+            cancelButton.style.display = "none";
+            confirmButton.disabled = true;
+            resetButton.disabled = true;
+        });
+    });
+
+    document.getElementById('uploadButton').addEventListener('click', function() {
+        document.getElementById('uploadExcel').click();
+    });
+
+    document.getElementById('uploadExcel').addEventListener('change', function(event) {
+        let file = event.target.files[0];
+        if (file) {
+            importExcel();
+        } else {
+            alert('กรุณาเลือกไฟล์ Excel');
         }
     });
-}
 
-function deleteProduct(productCode) {
-    if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบสินค้านี้?')) {
-        $.ajax({
-            url: 'record_products.php',
-            type: 'POST',
-            data: {
-                action: 'delete',
-                product_code: productCode
-            },
-            success: function(response) {
-                alert(response);
-                refreshProductTable();
-            },
-            error: function() {
-                alert('เกิดข้อผิดพลาดในการลบข้อมูล');
-            }
-        });
-    }
-}
+    function importExcel() {
+        let fileInput = document.getElementById('uploadExcel');
+        let file = fileInput.files[0];
 
-function refreshProductTable() {
-    $.ajax({
-        url: 'record_products.php?action=fetch',
-        type: 'GET',
-        success: function(response) {
-            var rows = '';
-            var products = JSON.parse(response);
-
-            $('#deleteProductTableBody').empty();
-            products.forEach(function(product) {
-                rows += '<tr data-product-code="' + product.product_code + '">' +
-                    '<td>' + product.product_code + '</td>' +
-                    '<td>' + product.product_name + '</td>' +
-                    '<td>' + product.quantity + '</td>' +
-                    '<td><button class="btn btn-danger" onclick="deleteProduct(\'' + product
-                    .product_code + '\')">ลบ</button></td>' +
-                    '</tr>';
-            });
-
-            $('#deleteProductTableBody').append(rows);
-        },
-        error: function() {
-            alert('เกิดข้อผิดพลาดในการดึงข้อมูล');
+        if (!file) {
+            alert('กรุณาเลือกไฟล์ Excel ก่อน');
+            return;
         }
-    });
-}
 
-function populateForm(product) {
-    $('#product_code').val(product.product_code).prop('readonly', true);
-    $('#product_name').val(product.product_name);
-    $('#product_model').val(product.product_model || '');
-    $('#production_date').val(product.production_date || '');
-    $('#shelf_life').val(product.shelf_life || '');
-    $('#expiry_date').val(product.expiry_date || '');
-    $('#sticker_color').val(product.sticker_color || '');
-    $('#reminder_date').val(product.reminder_date || '');
-    $('#received_date').val(product.received_date || '');
-    $('#quantity').val(product.quantity);
-    $('#unit').val(product.unit || '');
-    $('#unit_cost').val(product.unit_cost || '');
-    $('#sender_code').val(product.sender_code || '');
-    $('#sender_company').val(product.sender_company || '');
-    $('#recorder').val(product.recorder || '');
-    $('#unit_price').val(product.unit_price || '');
-    $('#category').val(product.category || '');
-}
+        let reader = new FileReader();
 
-$(document).on('click', '.edit-product', function() {
-    let product = $(this).data('product');
-    populateForm(product);
-    $('#editProductModal').modal('hide');
-}); ///คืออะไร
+        reader.onload = function(event) {
+            let data = new Uint8Array(event.target.result);
+            let workbook = XLSX.read(data, {
+                type: 'array'
+            });
+            let firstSheetName = workbook.SheetNames[0];
+            let worksheet = workbook.Sheets[firstSheetName];
 
-$(document).ready(function() {
-    $('#saveButton').hide();
-    $('#editButton').hide();
-    $('#cancelButton').hide();
-
-    $('#confirmButton').click(function(event) {
-        event.preventDefault();
-
-        $('input, select').each(function() {
-            var value = $(this).val();
-            $(this).prop('readonly', true);
-            $(this).css({
-                'background-color': '#cfd8e5',
+            let jsonData = XLSX.utils.sheet_to_json(worksheet, {
+                header: 1
             });
 
-        });
-        $('#saveButton').show();
-        $('#editButton').show();
-        $('#cancelButton').show();
-        $('#confirmButton').hide();
-        $('#resetButton').hide();
-    });
+            postExcelDataToDatabase(jsonData);
+        };
 
-    $('#resetButton').click(function() {
-        $('#productForm')[0].reset();
-
-        $('#saveButton').hide();
-        $('#editButton').hide();
-        $('#cancelButton').hide();
-        $('#confirmButton').show();
-        $('#resetButton').show();
-    });
-
-    $('#cancelButton').click(function() {
-        $('#productForm')[0].reset();
-        $('input, select').each(function() {
-            $(this).prop('readonly', false);
-            $(this).css({
-                'background-color': '',
-            });
-        });
-
-        $('#saveButton').hide();
-        $('#editButton').hide();
-        $('#cancelButton').hide();
-        $('#confirmButton').show();
-        $('#resetButton').show();
-    });
-
-    $('#editButton').click(function() {
-        $('input, select').each(function() {
-            $(this).prop('readonly', false);
-            $(this).css({
-                'background-color': '',
-            });
-        });
-
-        $('#saveButton').hide();
-        $('#editButton').hide();
-        $('#cancelButton').hide();
-        $('#confirmButton').show();
-        $('#resetButton').show();
-    });
-});
-
-document.getElementById('uploadButton').addEventListener('click', function() {
-    document.getElementById('uploadExcel').click();
-});
-
-document.getElementById('uploadExcel').addEventListener('change', function(event) {
-    let file = event.target.files[0];
-    if (file) {
-        importExcel();
-    } else {
-        alert('กรุณาเลือกไฟล์ Excel');
-    }
-});
-
-function importExcel() {
-    let fileInput = document.getElementById('uploadExcel');
-    let file = fileInput.files[0];
-
-    if (!file) {
-        alert('กรุณาเลือกไฟล์ Excel ก่อน');
-        return;
+        reader.readAsArrayBuffer(file);
     }
 
-    let reader = new FileReader();
+    function formatDateToISO(dateString) {
+    console.log('Original date:', dateString);
 
-    reader.onload = function(event) {
-        let data = new Uint8Array(event.target.result);
-        let workbook = XLSX.read(data, {
-            type: 'array'
-        });
-        let firstSheetName = workbook.SheetNames[0];
-        let worksheet = workbook.Sheets[firstSheetName];
-
-        let jsonData = XLSX.utils.sheet_to_json(worksheet, {
-            header: 1
-        });
-
-        postExcelDataToDatabase(jsonData);
-    };
-
-    reader.readAsArrayBuffer(file);
-}
-
-function formatDateToISO(dateString) {
-    if (!dateString || typeof dateString !== 'string') {
+    if (!dateString) {
         console.warn('Invalid date string:', dateString);
         return null;
     }
 
+    // ตรวจสอบว่า dateString เป็นตัวเลขหรือไม่ (Excel serial date)
+    if (!isNaN(dateString)) {
+        // Excel serial date เริ่มต้นที่วันที่ 1 มกราคม 1900 (ลบ 1 วันเพื่อชดเชย bug Excel)
+        const excelEpoch = new Date(1899, 11, 30);
+        const date = new Date(excelEpoch.getTime() + dateString * 86400000); // 86400000 ms ในหนึ่งวัน
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`; // รูปแบบ ISO (yyyy-mm-dd)
+    }
+
+    // ถ้าไม่ใช่ Excel serial date ให้แปลงในรูปแบบ dd-mm-yyyy
     const parts = dateString.split('-');
     if (parts.length === 3) {
-        let day = parts[0].padStart(2, '0');
-        let month = parts[1].padStart(2, '0');
-        let year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
-
+        const day = parts[0].padStart(2, '0');
+        const month = parts[1].padStart(2, '0');
+        const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
         return `${year}-${month}-${day}`;
     }
 
@@ -998,78 +917,83 @@ function formatDateToISO(dateString) {
 }
 
 
-function postExcelDataToDatabase(data) {
-    if (data.length < 2) {
-        alert('ไฟล์ไม่มีข้อมูลที่สามารถบันทึกได้');
-        return;
-    }
 
-    function checkDuplicate(product_code) {
-        return fetch(`record_products.php?action=check_duplicate&product_code=${encodeURIComponent(product_code)}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
-            .then(text => {
-                try {
-                    return JSON.parse(text).exists;
-                } catch (error) {
-                    console.error('Error parsing JSON:', error, 'Response Text:', text);
-                    throw error;
-                }
-            });
-    }
-
-    data.slice(1).forEach((row, index) => {
-        let product_code = row[0] || '';
-
-        if (!product_code) {
-            alert(`แถวที่ ${index + 2} ไม่มี รหัสสินค้า`);
+    function postExcelDataToDatabase(data) {
+        if (data.length < 2) {
+            alert('ไฟล์ไม่มีข้อมูลที่สามารถบันทึกได้');
             return;
         }
 
-        checkDuplicate(product_code).then(isDuplicate => {
-            if (isDuplicate) {
-                alert(`ข้อมูลซ้ำ: รหัสสินค้า "${product_code}" มีข้อมูลแล้ว`);
-            } else {
-                let formData = new FormData();
-                formData.append('save', 'true');
-                formData.append('product_code', product_code);
-                formData.append('product_name', row[1] || '');
-                formData.append('product_model', row[2] || '');
-                formData.append('production_date', row[3] ? formatDateToISO(row[3]) : ''); // วันที่ผลิต
-                formData.append('shelf_life', row[4] || '');
-                formData.append('expiry_date', row[5] ? formatDateToISO(row[5]) : ''); // วันหมดอายุ
-                formData.append('sticker_color', row[6] || '');
-                formData.append('reminder_date', row[7] ? formatDateToISO(row[7]) :
-                    ''); // เตือนล่วงหน้า
-                formData.append('received_date', row[8] ? formatDateToISO(row[8]) : ''); // วันรับเข้า
-                formData.append('quantity', row[9] || '');
-                formData.append('unit', row[10] || '');
-                formData.append('unit_cost', row[11] || '');
-                formData.append('sender_code', row[12] || '');
-                formData.append('sender_company', row[13] || '');
-                formData.append('recorder', row[14] || '');
-                formData.append('unit_price', row[15] || '');
-                formData.append('category', row[16] || '');
+        function checkDuplicate(product_code) {
+            return fetch(`import_excel.php?action=check_duplicate&product_code=${encodeURIComponent(product_code)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    try {
+                        return JSON.parse(text).exists;
+                    } catch (error) {
+                        console.error('Error parsing JSON:', error, 'Response Text:', text);
+                        throw error;
+                    }
+                });
+        }
 
-                fetch('record_products.php', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.text())
-                    .then(result => {
-                        alert(`บันทึกสำเร็จ: รหัสสินค้า "${product_code}"`);
-                    })
-                    .catch(error => {
-                        console.error(`เกิดข้อผิดพลาดกับ รหัสสินค้า "${product_code}":`, error);
-                    });
+        data.slice(1).forEach((row, index) => {
+            let product_code = row[0] || '';
+
+            if (!product_code) {
+                alert(`แถวที่ ${index + 2} ไม่มี รหัสสินค้า`);
+                return;
             }
+
+            checkDuplicate(product_code).then(isDuplicate => {
+                if (isDuplicate) {
+                    alert(`ข้อมูลซ้ำ: รหัสสินค้า "${product_code}" มีข้อมูลแล้ว`);
+                } else {
+                    let formData = new FormData();
+                    formData.append('save', 'true');
+                    formData.append('product_code', product_code);
+                    formData.append('product_name', row[1] || '');
+                    formData.append('product_model', row[2] || '');
+                    formData.append('production_date', row[3] ? formatDateToISO(row[3]) :
+                        ''); // วันที่ผลิต
+                    formData.append('shelf_life', row[4] || '');
+                    formData.append('expiration_date', row[5] ? formatDateToISO(row[5]) :
+                        ''); // วันหมดอายุ
+                    formData.append('sticker_color', row[6] || '');
+                    formData.append('reminder_date', row[7] ? formatDateToISO(row[7]) :
+                        ''); // เตือนล่วงหน้า
+                    formData.append('received_date', row[8] ? formatDateToISO(row[8]) :
+                        ''); // วันรับเข้า
+                    formData.append('quantity', row[9] || '');
+                    formData.append('unit', row[10] || '');
+                    formData.append('unit_cost', row[11] || '');
+                    formData.append('sender_code', row[12] || '');
+                    formData.append('sender_company', row[13] || '');
+                    formData.append('recorder', row[14] || '');
+                    formData.append('unit_price', row[15] || '');
+                    formData.append('category', row[16] || '');
+
+                    fetch('import_excel.php', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.text())
+                        .then(result => {
+                            alert(`บันทึกสำเร็จ: รหัสสินค้า "${product_code}"`);
+                        })
+                        .catch(error => {
+                            console.error(`เกิดข้อผิดพลาดกับ รหัสสินค้า "${product_code}":`, error);
+                        });
+                }
+            });
         });
-    });
-}
-</script>
+    }
+    </script>
+</body>
 
 </html>

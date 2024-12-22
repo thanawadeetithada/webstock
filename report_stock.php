@@ -3,58 +3,26 @@ session_start();
 include 'include/header.php';
 include 'config.php';
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: index.php");
-    exit;
-}
+$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, received_date, expiration_date AS stock_date, sticker_color, category, status
+        FROM products
+        WHERE expiration_date < CURDATE()
+        UNION ALL
+        SELECT product_code, product_name, quantity, unit, unit_cost, received_date, out_date AS stock_date, sticker_color, category, status
+        FROM out_product_details
+        UNION ALL
+        SELECT product_code, product_name, quantity, unit, unit_cost, received_date, sell_date AS stock_date, sticker_color, category, status
+        FROM sell_product_details";
 
-if (isset($_GET['startDate']) && isset($_GET['endDate'])) {
-    include 'config.php';
-
-    $startDate = $_GET['startDate'];
-    $endDate = $_GET['endDate'];
-
-    $sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, out_stock_date
-            FROM products
-            WHERE expiry_date BETWEEN ? AND ?";
-    $stmt = $conn->prepare($sql);
-    if (!$stmt) {
-        http_response_code(500);
-        echo json_encode(["error" => "SQL error: " . $conn->error]);
-        exit();
-    }
-
-    $stmt->bind_param("ss", $startDate, $endDate);
-    if (!$stmt->execute()) {
-        http_response_code(500);
-        echo json_encode(["error" => "Execution error: " . $stmt->error]);
-        exit();
-    }
-
-    $result = $stmt->get_result();
-    $data = [];
-
-    while ($row = $result->fetch_assoc()) {
-        $data[] = $row;
-    }
-
-    echo json_encode($data);
-    exit();
-}
-
-$sql_status = "SELECT DISTINCT status FROM products";
-$result_status = $conn->query($sql_status);
-
-$username = isset($_SESSION['username']) ? $_SESSION['username'] : 'ผู้ใช้';
-
-$total_items = 0;
-$total_quantity = 0;
-$total_price = 0;
-
-$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiry_date, sticker_color, out_stock_date , status
-FROM products
-WHERE status IN ('out', 'sell')";
 $result = $conn->query($sql);
+
+$allProducts = [];
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $allProducts[] = $row;
+    }
+} else {
+    $allProducts = ["error" => "SQL error: " . $conn->error];
+}
 
 $sticker_styles = [
     'หมดอายุเดือน 1' => 'background-color: #E3D200; color: #000;',
@@ -69,6 +37,7 @@ $sticker_styles = [
     'หมดอายุเดือน 10' => 'background-color: #F4D3DC; color: #000;',
     'หมดอายุเดือน 11' => 'background-color: #B9F4A2; color: #000;',
     'หมดอายุเดือน 12' => 'background-color: #FFFFFF; color: #000; border: 1px solid #ccc;',
+    'ไม่มีวันหมดอายุ' => 'background-color: #999999; color: #fff;',
 ];
 ?>
 
@@ -80,7 +49,7 @@ $sticker_styles = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>รายงานสินค้าที่ตัดออกจากสต็อก</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
     @media print {
         body * {
@@ -109,6 +78,11 @@ $sticker_styles = [
             width: 100%;
         }
 
+        td[style*="background-color"] {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
         .print-buttons {
             display: none;
         }
@@ -122,7 +96,7 @@ $sticker_styles = [
         font-family: Arial, sans-serif;
         background-color: #f9f9f9;
         margin: 0;
-        padding:  0px 20px 10px 20px;
+        padding: 0px 20px 10px 20px;
     }
 
     .container {
@@ -200,7 +174,6 @@ $sticker_styles = [
         display: flex;
         justify-content: center;
         margin-bottom: 20px;
-        margin-right: 6.5rem;
     }
 
     .print-buttons {
@@ -212,13 +185,15 @@ $sticker_styles = [
         gap: 10px;
     }
 
-    .print-buttons button {
-        font-size: 14px;
+    .print-buttons button,
+    .print-buttons button:focus {
+        font-size: 16px;
         border-radius: 5px;
         color: black;
         border: none;
         cursor: pointer;
         background-color: white;
+        outline: none;
     }
 
     button:disabled {
@@ -235,39 +210,35 @@ $sticker_styles = [
 <body>
     <div class="container">
         <div class="print-buttons">
-            <button><i class="fa-solid fa-print"></i></button>
-            <button>พิมพ์รายงาน</button>
+            <button id="downloadExcelBtn"><i class="fa-solid fa-file-excel"></i>
+                <p>ดาวน์โหลด Excel</p>
+            </button>
         </div>
 
         <div class="search-container">
             <div class="center-section">
                 <div class="dropdown-container">
-                    <label for="productCategory">เลือกช่วงวันที่</label>
-                    <input type="date" id="startDate">
+                    <label for="startDate">วันที่เริ่มต้น</label>
+                    <input type="date" id="startDate" class="form-control">
                 </div>
                 <label>ถึง</label>
                 <div class="dropdown-container">
-                    <input type="date" id="endDate">
+                    <label for="endDate">วันที่สิ้นสุด</label>
+                    <input type="date" id="endDate" class="form-control">
                 </div>
-
                 <div class="dropdown-container">
-                    <label for="productCategory">สถานะ</label>
-                    <select id="productCategory" name="productCategory">
+                    <label for="statusSelect">สถานะ</label>
+                    <select id="statusSelect" class="form-control">
                         <option value="">ทั้งหมด</option>
-                        <?php
-if ($result_status->num_rows > 0) {
-    while ($row = $result_status->fetch_assoc()) {
-        echo "<option value='" . $row['status'] . "'>" . $row['status'] . "</option>";
-    }
-}
-?>
+                        <option value="active">หมดอายุ</option>
+                        <option value="SELL">ขาย</option>
+                        <option value="OUT">ตัดสต็อก</option>
                     </select>
                 </div>
-
             </div>
         </div>
         <div class="center-button">
-            <button type="button" class="btn btn-primary" id="searchBtn">ค้นหา</button>
+            <button id="searchBtn" class="btn btn-primary">ค้นหา</button>
         </div>
         <table>
             <thead>
@@ -279,89 +250,134 @@ if ($result_status->num_rows > 0) {
                     <th>หน่วย</th>
                     <th>สีสติ๊กเกอร์</th>
                     <th>ราคา</th>
-                    <th>วันหมดอายุ</th>
                     <th>วันตัดสต็อก</th>
                     <th>สถานะ</th>
                 </tr>
             </thead>
             <tbody id="product-table-body">
-                <?php
-$no = 1;
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $sticker_color = $row['sticker_color'];
-        $sticker_style = isset($sticker_styles[$sticker_color]) ? $sticker_styles[$sticker_color] : 'background-color: #999999; color: #fff;';
-
-        echo "<tr data-product-code='" . htmlspecialchars($row['product_code']) . "'>";
-        echo "<td>" . $no++ . "</td>";
-        echo "<td>" . htmlspecialchars($row['product_code']) . "</td>";
-        echo "<td>" . htmlspecialchars($row['product_name']) . "</td>";
-        echo "<td>" . htmlspecialchars($row['quantity']) . "</td>";
-        echo "<td>" . htmlspecialchars($row['unit']) . "</td>";
-        echo "<td><button style='width: 100%; $sticker_style' disabled>" . htmlspecialchars($sticker_color) . "</button></td>";
-        echo "<td>" . htmlspecialchars($row['unit_cost']) . "</td>";
-        echo "<td>" . htmlspecialchars($row['expiry_date']) . "</td>";
-        echo "<td>" . (!empty($row['out_stock_date']) ? htmlspecialchars($row['out_stock_date']) : 'ไม่มีข้อมูล') . "</td>";
-        echo "<td>" . htmlspecialchars($row['status']) . "</td>";
-        echo "</tr>";
-    }
-} else {
-    echo "<tr><td colspan='10'>ไม่พบข้อมูลสินค้า</td></tr>";
-}
-?>
+                <tr>
+                    <td colspan="9">กรุณาค้นหาข้อมูล</td>
+                </tr>
             </tbody>
         </table>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
     <script>
-    document.querySelector(".print-buttons button").addEventListener("click", function() {
+    document.getElementById("downloadExcelBtn").addEventListener("click", function() {
         const startDate = document.getElementById("startDate").value || "ไม่ระบุ";
         const endDate = document.getElementById("endDate").value || "ไม่ระบุ";
 
-        let existingHeader = document.getElementById("printHeader");
-        if (existingHeader) {
-            existingHeader.remove();
+        // ดึงข้อมูลจากตาราง HTML
+        const table = document.querySelector("table");
+        const ws = XLSX.utils.table_to_sheet(table); // แปลงข้อมูลตารางเป็น Worksheet
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "รายงานสินค้า");
+
+        // ตั้งชื่อไฟล์
+        const fileName = `รายงานสินค้า_${startDate}_ถึง_${endDate}.xlsx`;
+
+        // ดาวน์โหลดไฟล์ Excel
+        XLSX.writeFile(wb, fileName);
+    });
+
+    const allProducts = <?php echo json_encode($allProducts); ?>;
+    const stickerStyles = <?php echo json_encode($sticker_styles); ?>;
+
+    function displayProducts(products) {
+        const tableBody = document.getElementById("product-table-body");
+        tableBody.innerHTML = "";
+
+        if (!products || products.length === 0) {
+            tableBody.innerHTML = "<tr><td colspan='9'>ไม่พบข้อมูลสินค้า</td></tr>";
+        } else {
+
+            products.sort((a, b) => new Date(a.stock_date) - new Date(b.stock_date));
+
+            products.forEach((row, index) => {
+                const stickerStyle = stickerStyles[row.sticker_color] || "";
+                let statusText = '-'; // ค่าเริ่มต้น
+                if (row.status === 'active') {
+                    statusText = 'หมดอายุ';
+                } else if (row.status === 'SELL') {
+                    statusText = 'ขาย';
+                } else if (row.status === 'OUT') {
+                    statusText = 'ตัดสต็อก';
+                }
+                const newRow = `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${row.product_code || '-'}</td>
+                <td>${row.product_name || '-'}</td>
+                <td>${row.quantity || '-'}</td>
+                <td>${row.unit || '-'}</td>
+                <td>${row.unit_cost || '-'}</td>
+                <td style="${stickerStyle}">${row.sticker_color || '-'}</td>
+                <td>${row.stock_date || '-'}</td>
+                <td>${statusText}</td>
+            </tr>`;
+                tableBody.insertAdjacentHTML("beforeend", newRow);
+            });
         }
-
-        let printHeader = document.createElement("div");
-        printHeader.id = "printHeader";
-        printHeader.innerHTML = `<h4>วันที่: ${startDate} - ${endDate}</h4>`;
-
-        let table = document.querySelector("table");
-        table.parentElement.insertBefore(printHeader, table);
-
-        setTimeout(() => {
-            window.print();
-        }, 100);
+    }
+    document.addEventListener("DOMContentLoaded", () => {
+        displayProducts(allProducts);
     });
 
     document.getElementById("searchBtn").addEventListener("click", function() {
-        const startDate = new Date(document.getElementById("startDate").value);
-        const endDate = new Date(document.getElementById("endDate").value);
+        const startDateInput = document.getElementById("startDate").value;
+        const endDateInput = document.getElementById("endDate").value;
+        const status = document.getElementById("statusSelect").value;
 
-        if (!startDate || !endDate) {
-            alert("กรุณาเลือกช่วงวันที่ให้ครบถ้วน");
+        if (!startDateInput || !endDateInput) {
+            alert("กรุณาระบุวันที่ให้ครบถ้วน");
             return;
         }
-        const rows = Array.from(document.querySelectorAll("#product-table-body tr"));
-        const filteredRows = rows.filter((row) => {
-            const expiryDate = new Date(row.cells[7].textContent.trim()); // คอลัมน์ "วันหมดอายุ"
-            return expiryDate >= startDate && expiryDate <= endDate;
-        });
 
-        renderSortedRows(filteredRows);
+        const startDate = new Date(startDateInput).toISOString().split('T')[0];
+        const endDate = new Date(endDateInput).toISOString().split('T')[0];
+
+        fetch("fetch_report_stock.php", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    startDate: startDate,
+                    endDate: endDate,
+                    status: status,
+                }),
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    displayProducts(data);
+                }
+            })
+            .catch((error) => console.error("Error:", error));
     });
-
 
     function toggleSearchButton() {
         const startDate = document.getElementById("startDate").value;
         const endDate = document.getElementById("endDate").value;
         const searchBtn = document.getElementById("searchBtn");
+        const statusSelect = document.getElementById("statusSelect");
 
-        if (!startDate || !endDate || new Date(endDate) < new Date(startDate)) {
+        if (!startDate && !endDate) {
+            // If both dates are empty, show all products
+            displayProducts(allProducts);
             searchBtn.disabled = true;
+            statusSelect.disabled = true;
+        } else if (!startDate || !endDate || new Date(endDate) < new Date(startDate)) {
+            searchBtn.disabled = true;
+            statusSelect.disabled = true;
+            statusSelect
         } else {
             searchBtn.disabled = false;
+            statusSelect.disabled = false;
         }
     }
 
@@ -378,39 +394,6 @@ if ($result->num_rows > 0) {
         toggleSearchButton();
     });
     toggleSearchButton();
-
-    // เก็บแถวต้นฉบับไว้ในตัวแปรเมื่อโหลดหน้าเว็บ
-    const originalRows = Array.from(document.querySelectorAll("#product-table-body tr"));
-
-    document.getElementById("productCategory").addEventListener("change", function() {
-        const selectedStatus = this.value;
-        const filteredRows = originalRows.filter((row) => {
-            const statusCell = row.cells[9]; // คอลัมน์ "สถานะ" (index 9)
-            return selectedStatus === "" || (statusCell && statusCell.textContent.trim() ===
-                selectedStatus);
-        });
-
-        renderSortedRows(filteredRows);
-    });
-
-    function renderSortedRows(rows) {
-        rows.sort((a, b) => {
-            const indexA = parseInt(a.cells[0].textContent.trim());
-            const indexB = parseInt(b.cells[0].textContent.trim());
-            return indexA - indexB;
-        });
-
-        const tableBody = document.getElementById("product-table-body");
-        tableBody.innerHTML = "";
-
-        if (rows.length === 0) {
-            tableBody.innerHTML = "<tr><td colspan='10'>ไม่พบข้อมูล</td></tr>";
-        } else {
-            rows.forEach((row) => {
-                tableBody.appendChild(row.cloneNode(true));
-            });
-        }
-    }
     </script>
 
 </body>

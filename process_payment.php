@@ -55,9 +55,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Insert ข้อมูลใน table sell_product_details
         $sql_details = "INSERT INTO sell_product_details 
-                        (sell_id, product_code, product_name, quantity, unit_price, expiry_date, 
+                        (sell_id, product_code, product_name, quantity, unit_price, expiration_date, 
                          product_model, production_date, shelf_life, sticker_color, reminder_date, 
-                         receive_date, unit, unit_cost, sender_code, sender_company, recorder, 
+                         received_date, unit, unit_cost, sender_code, sender_company, recorder, 
                          category, status) 
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt_details = $conn->prepare($sql_details);
@@ -65,26 +65,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach ($products as $detail) {
             $status = 'SELL';
             $stmt_details->bind_param(
-                "issidssisssssssssss",
+                "issidsssissssdsssss",
                 $sell_id,
                 $detail['product_code'],
                 $detail['product_name'],
                 $detail['quantity'],
                 $detail['unit_price'],
-                $detail['expiry_date'],
+                $detail['expiration_date'],
                 $detail['product_model'],
                 $detail['production_date'],
                 $detail['shelf_life'],
                 $detail['sticker_color'],
                 $detail['reminder_date'],
-                $detail['receive_date'],
+                $detail['received_date'],
                 $detail['unit'],
                 $detail['unit_cost'],
                 $detail['sender_code'],
                 $detail['sender_company'],
                 $detail['recorder'],
                 $detail['category'],
-                $status // กำหนดให้ status เป็น 'SELL'
+                $status
             );
 
             if (!$stmt_details->execute()) {

@@ -8,103 +8,124 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-// นับจำนวนสินค้าในฐานข้อมูลที่มี expiry_date น้อยกว่าวันนี้
-$sql_count = "SELECT COUNT(*) AS total_waste
-              FROM products
-              WHERE expiry_date < CURDATE()";
-$result_count = $conn->query($sql_count);
-
-if ($result_count->num_rows > 0) {
-    $row_count = $result_count->fetch_assoc();
-    $total_waste = $row_count['total_waste'];
-} else {
-    $total_waste = 0;
-}
-
-// คำนวณมูลค่าของเสียทั้งหมด (ราคาทุนรวม)
-$sql_value = "SELECT SUM(unit_price) AS total_value
-              FROM products
-              WHERE expiry_date < CURDATE()"; // เงื่อนไข expiry_date < วันนี้
-$result_value = $conn->query($sql_value);
-
-if ($result_value->num_rows > 0) {
-    $row_value = $result_value->fetch_assoc();
-    $total_value = $row_value['total_value']; // เก็บมูลค่ารวมที่ได้จากฐานข้อมูล
-} else {
-    $total_value = 0; // กรณีไม่มีข้อมูล
-}
-
-// ดึงข้อมูลปี
-$sql = "SELECT DISTINCT YEAR(expiry_date) AS expiry_year FROM products ORDER BY expiry_year DESC";
-$result = $conn->query($sql);
-
+$current_year = date("Y"); // หาปีปัจจุบันใน PHP
+$year_sql = "
+    SELECT DISTINCT YEAR(expiration_date) AS year 
+    FROM products
+    WHERE YEAR(expiration_date) <= $current_year
+    UNION
+    SELECT DISTINCT YEAR(sell_date) AS year 
+    FROM sell_product_details
+    WHERE YEAR(sell_date) <= $current_year
+    ORDER BY year DESC
+";
+$year_result = $conn->query($year_sql);
 $years = [];
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $years[] = $row['expiry_year'];
+if ($year_result->num_rows > 0) {
+    while ($row = $year_result->fetch_assoc()) {
+        $years[] = $row['year'];
     }
 }
 
-$months = range(1, 12); // [1, 2, 3, ..., 12]
 
-//ดึงข้อมูลที่นับจำนวนสินค้าตาม category และ status ที่ต้องการ กราฟ
-$sql_category = "SELECT category,
-                        SUM(CASE WHEN status = 'sell' THEN 1 ELSE 0 END) AS sell_count,
-                        SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) AS expired_count
-                 FROM products
-                 WHERE status IN ('sell', 'expired')
-                 GROUP BY category";
-
-$result_category = $conn->query($sql_category);
-
-$categories = [];
-$sell_counts = [];
-$expired_counts = [];
-
-if ($result_category->num_rows > 0) {
-    while ($row = $result_category->fetch_assoc()) {
-        $categories[] = $row['category']; // เก็บชื่อ category
-        $sell_counts[] = $row['sell_count']; // จำนวนสินค้าสถานะ 'sell'
-        $expired_counts[] = $row['expired_count']; // จำนวนสินค้าสถานะ 'expired'
-    }
-}
-
-// กำหนดสีสำหรับแต่ละ category
-$category_colors = [
-    "ของใช้" => "#33FF33", // ของใช้
-    "เครื่องปรุงรส" => "#FFFF33", // เครื่องปรุงรส
-    "ขนม/เครื่องดื่ม" => "#007FFF", // ขนม/เครื่องดื่ม
-    "อาหาร" => "#FF33FF", // อาหาร
+$month_names = [
+    1 => "มกราคม",
+    2 => "กุมภาพันธ์",
+    3 => "มีนาคม",
+    4 => "เมษายน",
+    5 => "พฤษภาคม",
+    6 => "มิถุนายน",
+    7 => "กรกฎาคม",
+    8 => "สิงหาคม",
+    9 => "กันยายน",
+    10 => "ตุลาคม",
+    11 => "พฤศจิกายน",
+    12 => "ธันวาคม",
 ];
 
-// สร้างอาร์เรย์สีสำหรับกราฟ
-$background_colors_sell = [];
-$border_colors_sell = [];
-$background_colors_expired = [];
-$border_colors_expired = [];
+$all_categories = ['ขนม/เครื่องดื่ม', 'ของใช้', 'อาหาร', 'เครื่องปรุงรส'];
 
-foreach ($categories as $category) {
-    // กำหนดสีให้กับแต่ละ category สำหรับ 'sell'
-    if (array_key_exists($category, $category_colors)) {
-        $background_colors_sell[] = $category_colors[$category];
-        $border_colors_sell[] = $category_colors[$category];
-    } else {
-        // ถ้าไม่พบหมวดหมู่ในอาร์เรย์ ก็สามารถกำหนดสีที่ default ได้
-        $background_colors_sell[] = '#CCCCCC'; // สีเทา
-        $border_colors_sell[] = '#CCCCCC'; // สีเทา
-    }
+$sell_data_sql = "
+    SELECT category, COUNT(*) AS total
+    FROM sell_product_details
+    GROUP BY category
+";
+$sell_data_result = $conn->query($sell_data_sql);
 
-    // กำหนดสีให้กับแต่ละ category สำหรับ 'expired'
-    if (array_key_exists($category, $category_colors)) {
-        $background_colors_expired[] = $category_colors[$category];
-        $border_colors_expired[] = $category_colors[$category];
-    } else {
-        // ถ้าไม่พบหมวดหมู่ในอาร์เรย์ ก็สามารถกำหนดสีที่ default ได้
-        $background_colors_expired[] = '#CCCCCC'; // สีเทา
-        $border_colors_expired[] = '#CCCCCC'; // สีเทา
+// เติมข้อมูลให้ครบทุก category
+$sell_data = [];
+foreach ($all_categories as $category) {
+    $sell_data[$category] = 0; // ตั้งค่าเริ่มต้นเป็น 0
+}
+if ($sell_data_result->num_rows > 0) {
+    while ($row = $sell_data_result->fetch_assoc()) {
+        $sell_data[$row['category']] = $row['total']; // อัปเดตข้อมูลที่มีอยู่จริง
     }
 }
 
+$expiration_data_sql = "
+    SELECT category, COUNT(*) AS total
+    FROM products
+    WHERE expiration_date < CURDATE()
+    GROUP BY category
+";
+$expiration_data_result = $conn->query($expiration_data_sql);
+
+// เติมข้อมูลให้ครบทุก category
+$expiration_data = [];
+foreach ($all_categories as $category) {
+    $expiration_data[$category] = 0; // ตั้งค่าเริ่มต้นเป็น 0
+}
+if ($expiration_data_result->num_rows > 0) {
+    while ($row = $expiration_data_result->fetch_assoc()) {
+        $expiration_data[$row['category']] = $row['total']; // อัปเดตข้อมูลที่มีอยู่จริง
+    }
+}
+
+
+$expired_count_sql = "
+    SELECT COUNT(*) AS total_expired
+    FROM products
+    WHERE expiration_date < CURDATE()
+";
+
+$expired_count_result = $conn->query($expired_count_sql);
+$total_expired = 0; // ค่าเริ่มต้น
+if ($expired_count_result->num_rows > 0) {
+    $row = $expired_count_result->fetch_assoc();
+    $total_expired = $row['total_expired'];
+}
+
+$expired_cost_sql = "
+    SELECT SUM(unit_cost) AS total_expired_cost
+    FROM products
+    WHERE expiration_date < CURDATE()
+";
+
+$expired_cost_result = $conn->query($expired_cost_sql);
+$total_expired_cost = 0; // ค่าเริ่มต้น
+if ($expired_cost_result->num_rows > 0) {
+    $row = $expired_cost_result->fetch_assoc();
+    $total_expired_cost = $row['total_expired_cost'] ?? 0;
+}
+
+$profit_sql = "
+    SELECT SUM(unit_price - unit_cost) AS total_profit
+    FROM sell_product_details
+";
+
+$profit_result = $conn->query($profit_sql);
+$total_profit = 0; // ค่าเริ่มต้น
+if ($profit_result->num_rows > 0) {
+    $row = $profit_result->fetch_assoc();
+    $total_profit = $row['total_profit'] ?? 0;
+}
+
+echo json_encode([
+    'sell_totals' => array_values($sell_data),
+    'expiration_totals' => array_values($expiration_data),
+    'total_expired' => $total_expired, // เพิ่มค่า total_expired
+]);
 ?>
 
 <!DOCTYPE html>
@@ -123,7 +144,7 @@ foreach ($categories as $category) {
         font-family: Arial, sans-serif;
         background-color: #f9f9f9;
         margin: 0;
-        padding:  0px 20px 10px 20px;
+        padding: 0px 20px 10px 20px;
     }
 
     .container {
@@ -218,7 +239,7 @@ foreach ($categories as $category) {
         <div class="search-container">
             <div class="center-section">
                 <div class="dropdown-container">
-                    <label for="year">ของเสียในแต่ละปี</label>
+                    <label for="yearDropdown">ของเสียในแต่ละปี</label>
                     <form>
                         <select name="year" id="yearDropdown">
                             <option value="">ทั้งหมด</option>
@@ -232,48 +253,33 @@ foreach ($years as $year) {
                 </div>
 
                 <div class="dropdown-container">
-                    <label for="month">ของเสียในแต่ละเดือน</label>
+                    <label for="monthDropdown">ของเสียในแต่ละเดือน</label>
                     <form>
                         <select name="month" id="monthDropdown">
                             <option value="">ทั้งหมด</option>
                             <?php
-$month_names = [
-    1 => "มกราคม",
-    2 => "กุมภาพันธ์",
-    3 => "มีนาคม",
-    4 => "เมษายน",
-    5 => "พฤษภาคม",
-    6 => "มิถุนายน",
-    7 => "กรกฎาคม",
-    8 => "สิงหาคม",
-    9 => "กันยายน",
-    10 => "ตุลาคม",
-    11 => "พฤศจิกายน",
-    12 => "ธันวาคม",
-];
-foreach ($months as $month) {
-    echo "<option value=\"$month\">{$month_names[$month]}</option>";
+foreach ($month_names as $month_number => $month_name) {
+    echo "<option value=\"$month_number\">$month_name</option>";
 }
 ?>
                         </select>
-
                     </form>
                 </div>
 
                 <button type="button" disabled class="btn btn-outline-danger">
                     <h5>จำนวนของเสีย</h5>
                     <h5>ทั้งหมด</h5>
-                    <h5><?php echo $total_waste; ?></h5>
+                    <h5 id="totalExpired"><?php echo $total_expired; ?></h5>
                 </button>
                 <button type="button" disabled class="btn btn-outline-info">
                     <h5>มูลค่าของเสียทั้งหมด</h5>
                     <p>ราคาทุนรวม</p>
-                    <h5><?php echo number_format($total_value, 2); ?> บาท</h5>
+                    <h5><?php echo number_format($total_expired_cost, 2); ?> บาท</h5>
                 </button>
                 <button type="button" disabled class="btn btn-outline-success">
                     <h5>มูลค่ากำไร</h5>
                     <p>ขาย-ทุน</p>
-                    <h5><?php echo number_format($total_value, 2); ?> บาท</h5>
+                    <h5><?php echo number_format($total_profit, 2); ?> บาท</h5>
                 </button>
 
             </div>
@@ -301,14 +307,80 @@ foreach ($months as $month) {
     </div>
 
     <script>
-    // ดึง dropdown ของปีและเดือน
-    const yearDropdown = document.getElementById('yearDropdown');
-    const monthDropdown = document.getElementById('monthDropdown');
+    const data = <?php echo json_encode([
+    'categories' => $all_categories,
+    'sell_totals' => array_values($sell_data),
+    'expiration_totals' => array_values($expiration_data),
+]); ?>;
 
-    // ฟังก์ชันสำหรับดึงข้อมูลกราฟ
+    const categories = data.categories;
+    const sellTotals = data.sell_totals;
+    const expirationTotals = data.expiration_totals;
+
+    // กำหนดสีให้แต่ละหมวดหมู่
+    const categoryColors = {
+        'ขนม/เครื่องดื่ม': '#007FFF',
+        'ของใช้': '#33FF33',
+        'อาหาร': '#FF33FF',
+        'เครื่องปรุงรส': '#FFFF33'
+    };
+
+    // แปลงสีของแต่ละหมวดหมู่
+    const backgroundColors = categories.map(category => categoryColors[category] || '#CCCCCC');
+
+    const ctx = document.getElementById('wasteChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: categories,
+            datasets: [{
+                    label: 'จำนวนขาย',
+                    data: sellTotals,
+                    backgroundColor: backgroundColors,
+                    borderColor: backgroundColors,
+                    borderWidth: 1
+                },
+                {
+                    label: 'จำนวนหมดอายุ',
+                    data: expirationTotals,
+                    backgroundColor: backgroundColors,
+                    borderColor: backgroundColors,
+                    borderWidth: 1
+                }
+            ],
+        },
+        options: {
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'จำนวน',
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            }
+        }
+    });
+
+    document.getElementById("yearDropdown").addEventListener("change", function() {
+        fetchData();
+    });
+
+    document.getElementById("monthDropdown").addEventListener("change", function() {
+        fetchData();
+    });
+
+
     function fetchData() {
-        const selectedYear = yearDropdown.value;
-        const selectedMonth = monthDropdown.value;
+        const selectedYear = document.getElementById("yearDropdown").value;
+        const selectedMonth = document.getElementById("monthDropdown").value;
 
         let url = 'fetch_waste_data.php?';
         if (selectedYear) url += `year=${selectedYear}&`;
@@ -317,68 +389,23 @@ foreach ($months as $month) {
         fetch(url)
             .then(response => response.json())
             .then(data => {
-                // อัปเดตข้อมูลในกราฟ
-                wasteChart.data.labels = data.categories;
-                wasteChart.data.datasets[0].data = data.sell_counts;
-                wasteChart.data.datasets[1].data = data.expired_counts;
+                console.log("Fetched data:", data);
 
-                wasteChart.update(); // อัปเดตกราฟ
+                // อัปเดตข้อมูลในกราฟ
+                updateChart(chart, data.categories, data.sell_totals, data.expiration_totals);
             })
             .catch(error => console.error('Error fetching data:', error));
     }
 
-    // เพิ่ม Event Listener ให้ dropdown ปีและเดือน
-    yearDropdown.addEventListener('change', fetchData);
-    monthDropdown.addEventListener('change', fetchData);
+    function updateChart(chart, categories, sellTotals, expirationTotals) {
+        chart.data.labels = categories;
+        chart.data.datasets[0].data = sellTotals; // อัปเดตข้อมูลจำนวนขาย
+        chart.data.datasets[1].data = expirationTotals; // อัปเดตข้อมูลจำนวนหมดอายุ
+        chart.update(); // ทำให้กราฟรีเฟรชข้อมูลใหม่
+    }
 
-    var ctx = document.getElementById('wasteChart').getContext('2d');
-    var wasteChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: <?php echo json_encode($categories); ?>, // หมวดหมู่ที่ได้จากฐานข้อมูล
-            datasets: [{
-                    label: 'จำนวนสินค้าสถานะการขาย',
-                    data: <?php echo json_encode($sell_counts); ?>, // จำนวนสินค้าสถานะ sell
-                    backgroundColor: <?php echo json_encode($background_colors_sell); ?>, // สีตามแต่ละ category สำหรับ 'sell'
-                    borderColor: <?php echo json_encode($border_colors_sell); ?>, // สีขอบตามแต่ละ category สำหรับ 'sell'
-                    borderWidth: 1
-                },
-                {
-                    label: 'จำนวนสินค้าสถานะหมดอายุ',
-                    data: <?php echo json_encode($expired_counts); ?>, // จำนวนสินค้าสถานะ expired
-                    backgroundColor: <?php echo json_encode($background_colors_expired); ?>, // สีตามแต่ละ category สำหรับ 'expired'
-                    borderColor: <?php echo json_encode($border_colors_expired); ?>, // สีขอบตามแต่ละ category สำหรับ 'expired'
-                    borderWidth: 1
-                }
-            ]
-        },
-        options: {
-            indexAxis: 'y',
-            scales: {
-                x: {
-                    beginAtZero: true
-                }
-            },
-            plugins: {
-                legend: {
-                display: false // ซ่อน legend (คำอธิบายชุดข้อมูล)
-            },
-                datalabels: {
-                    anchor: 'center', // ตำแหน่งการแสดง (start, end, center)
-                    align: 'center', // จัดตำแหน่งตามแกน (start, end, center)
-                    color: '#000', // สีตัวเลข
-                    font: {
-                        weight: 'bold',
-                        size: 18
-                    },
-                    formatter: function(value) {
-                        return value; // แสดงค่าตัวเลขตรง ๆ
-                    }
-                }
-            }
-        },
-        plugins: [ChartDataLabels] // เปิดใช้งาน ChartDataLabels
-    });
+    document.getElementById("yearDropdown").addEventListener("change", fetchData);
+    document.getElementById("monthDropdown").addEventListener("change", fetchData);
     </script>
 
 </body>

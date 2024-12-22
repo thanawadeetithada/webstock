@@ -1,56 +1,22 @@
 <?php
 session_start();
-include('include/header.php');
+include 'include/header.php';
 include('config.php');
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: index.php");
-    exit;
-}
 
-if (isset($_GET['startDate']) && isset($_GET['endDate'])) {
-    include('config.php');
+$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, received_date, expiration_date, sticker_color, category 
+        FROM products WHERE expiration_date < CURRENT_DATE";
 
-    $startDate = $_GET['startDate'];
-    $endDate = $_GET['endDate'];
-
-    $sql = "SELECT product_code, product_name, quantity, unit, unit_cost, received_date, expiry_date, sticker_color, category 
-            FROM products 
-            WHERE expiry_date BETWEEN ? AND ?";
-    $stmt = $conn->prepare($sql);
-    if (!$stmt) {
-        http_response_code(500);
-        echo json_encode(["error" => "SQL error: " . $conn->error]);
-        exit();
-    }
-
-    $stmt->bind_param("ss", $startDate, $endDate);
-    if (!$stmt->execute()) {
-        http_response_code(500);
-        echo json_encode(["error" => "Execution error: " . $stmt->error]);
-        exit();
-    }
-
-    $result = $stmt->get_result();
-    $data = [];
-
-    while ($row = $result->fetch_assoc()) {
-        $data[] = $row;
-    }
-
-    echo json_encode($data);
-    exit();
-}
-
-$username = isset($_SESSION['username']) ? $_SESSION['username'] : 'ผู้ใช้';
-
-$total_items = 0;
-$total_quantity = 0;
-$total_price = 0;
-
-
-$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, received_date, expiry_date, sticker_color, category FROM products";
 $result = $conn->query($sql);
+
+$allProducts = [];
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $allProducts[] = $row;
+    }
+} else {
+    $allProducts = ["error" => "SQL error: " . $conn->error];
+}
 
 $sticker_styles = [
     'หมดอายุเดือน 1' => 'background-color: #E3D200; color: #000;',
@@ -110,7 +76,7 @@ $sticker_styles = [
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-        
+
         .print-buttons {
             display: none;
         }
@@ -246,22 +212,22 @@ $sticker_styles = [
         <div class="search-container">
             <div class="center-section">
                 <div class="dropdown-container">
-                    <label for="productCategory">เลือกช่วงวันที่</label>
-                    <input type="date" id="startDate">
+                    <label for="startDate">วันที่เริ่มต้น:</label>
+                    <input type="date" id="startDate" class="form-control">
                 </div>
                 <label>ถึง</label>
                 <div class="dropdown-container">
-                    <input type="date" id="endDate">
+                    <label for="endDate">วันที่สิ้นสุด:</label>
+                    <input type="date" id="endDate" class="form-control">
                 </div>
             </div>
         </div>
         <div class="center-button">
-            <button type="button" class="btn btn-primary" id="searchBtn">ค้นหา</button>
+            <button id="searchBtn" class="btn btn-primary">ค้นหา</button>
         </div>
         <table>
             <thead>
                 <tr>
-                    <th>ลำดับ</th>
                     <th>รหัสสินค้า</th>
                     <th>ชื่อสินค้า</th>
                     <th>จำนวน</th>
@@ -274,30 +240,9 @@ $sticker_styles = [
                 </tr>
             </thead>
             <tbody id="product-table-body">
-                <?php
-                $no = 1;
-                if ($result->num_rows > 0) {
-                    while($row = $result->fetch_assoc()) {
-                        $sticker_color = $row['sticker_color'];
-                        $sticker_style = isset($sticker_styles[$sticker_color]) ? $sticker_styles[$sticker_color] : 'background-color: #999999; color: #fff;';
-                
-                        echo "<tr data-product-code='" . $row['product_code'] . "'>";
-                        echo "<td>" . $no++ . "</td>";
-                        echo "<td>" . $row['product_code'] . "</td>";
-                        echo "<td>" . $row['product_name'] . "</td>";
-                        echo "<td>" . $row['quantity'] . "</td>";
-                        echo "<td>" . $row['unit'] . "</td>";
-                        echo "<td>" . $row['unit_cost'] . "</td>";
-                        echo "<td>" . $row['received_date'] . "</td>";
-                        echo "<td>" . $row['expiry_date'] . "</td>";
-                        echo "<td style='" . $sticker_style . "'>" . $row['sticker_color'] . "</td>";
-                        echo "<td>" . $row['category'] . "</td>";
-                        echo "</tr>";
-                    }
-                } else {
-                    echo "<tr><td colspan='8'>ไม่พบข้อมูลสินค้า</td></tr>";
-                }
-                ?>
+                <tr>
+                    <td colspan="9">กรุณาค้นหาข้อมูล</td>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -324,34 +269,86 @@ $sticker_styles = [
         }, 100);
     });
 
-    document.getElementById("searchBtn").addEventListener("click", function() {
-        const startDate = new Date(document.getElementById("startDate").value);
-        const endDate = new Date(document.getElementById("endDate").value);
+    const allProducts = <?php echo json_encode($allProducts); ?>;
+    const stickerStyles = <?php echo json_encode($sticker_styles); ?>;
 
-        if (!startDate || !endDate) {
-            alert("กรุณาเลือกช่วงวันที่ให้ครบถ้วน");
-            return;
-        }
-        const rows = Array.from(document.querySelectorAll("#product-table-body tr"));
-        const filteredRows = rows.filter((row) => {
-            const expiryDate = new Date(row.cells[7].textContent.trim()); // คอลัมน์ "วันหมดอายุ"
-            return expiryDate >= startDate && expiryDate <= endDate;
-        });
-        filteredRows.sort((a, b) => {
-            const dateA = new Date(a.cells[7].textContent.trim());
-            const dateB = new Date(b.cells[7].textContent.trim());
-            return dateA - dateB;
-        });
+    function displayProducts(products) {
         const tableBody = document.getElementById("product-table-body");
         tableBody.innerHTML = "";
 
-        if (filteredRows.length === 0) {
-            tableBody.innerHTML = "<tr><td colspan='9'>ไม่พบข้อมูลในช่วงวันที่ที่เลือก</td></tr>";
+        if (products.length === 0) {
+            tableBody.innerHTML = "<tr><td colspan='9'>ไม่พบข้อมูลสินค้า</td></tr>";
         } else {
-            filteredRows.forEach((row) => {
-                tableBody.appendChild(row);
+            products.forEach(row => {
+                const stickerStyle = stickerStyles[row.sticker_color] || "";
+                const newRow = `
+                <tr>
+                    <td>${row.product_code}</td>
+                    <td>${row.product_name}</td>
+                    <td>${row.quantity}</td>
+                    <td>${row.unit}</td>
+                    <td>${row.unit_cost}</td>
+                    <td>${row.received_date}</td>
+                    <td>${row.expiration_date}</td>
+                    <td style="${stickerStyle}">${row.sticker_color}</td>
+                    <td>${row.category}</td>
+                </tr>`;
+                tableBody.insertAdjacentHTML("beforeend", newRow);
             });
         }
+    }
+    document.addEventListener("DOMContentLoaded", () => {
+        displayProducts(allProducts);
+    });
+
+    document.getElementById("searchBtn").addEventListener("click", function() {
+        const startDateInput = document.getElementById("startDate").value;
+        const endDateInput = document.getElementById("endDate").value;
+
+        if (!startDateInput || !endDateInput) {
+            alert("กรุณาระบุวันที่ให้ครบถ้วน");
+            return;
+        }
+
+        const startDate = new Date(startDateInput).toISOString().split('T')[0];
+        const endDate = new Date(endDateInput).toISOString().split('T')[0];
+
+        fetch(`fetch_products_expiration.php?startDate=${startDate}&endDate=${endDate}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const tableBody = document.getElementById("product-table-body");
+                tableBody.innerHTML = "";
+
+                if (data.length === 0) {
+                    tableBody.innerHTML = "<tr><td colspan='9'>ไม่พบข้อมูลในช่วงวันที่ที่เลือก</td></tr>";
+                } else {
+                    data.forEach(row => {
+                        const stickerStyle = stickerStyles[row.sticker_color] || "";
+                        const newRow = `
+                            <tr>
+                                <td>${row.product_code}</td>
+                                <td>${row.product_name}</td>
+                                <td>${row.quantity}</td>
+                                <td>${row.unit}</td>
+                                <td>${row.unit_cost}</td>
+                                <td>${row.received_date}</td>
+                                <td>${row.expiration_date}</td>
+                                <td style="${stickerStyle}">${row.sticker_color}</td>
+                                <td>${row.category}</td>
+                            </tr>`;
+                        tableBody.insertAdjacentHTML("beforeend", newRow);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching data:", error);
+                alert("เกิดข้อผิดพลาดในการดึงข้อมูล: " + error.message);
+            });
     });
 
     function toggleSearchButton() {
@@ -359,7 +356,11 @@ $sticker_styles = [
         const endDate = document.getElementById("endDate").value;
         const searchBtn = document.getElementById("searchBtn");
 
-        if (!startDate || !endDate || new Date(endDate) < new Date(startDate)) {
+        if (!startDate && !endDate) {
+            // If both dates are empty, show all products
+            displayProducts(allProducts);
+            searchBtn.disabled = true;
+        } else if (!startDate || !endDate || new Date(endDate) < new Date(startDate)) {
             searchBtn.disabled = true;
         } else {
             searchBtn.disabled = false;

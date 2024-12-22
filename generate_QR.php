@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $newProductCode = $oldProductCode . 'E' . $formattedDate;
 
         // อัปเดตข้อมูลในฐานข้อมูล (update แทน insert)
-        $stmt = $conn->prepare("UPDATE products SET product_code = ?, expiry_date = ? WHERE product_code = ?");
+        $stmt = $conn->prepare("UPDATE products SET product_code = ?, expiration_date = ? WHERE product_code = ?");
         $stmt->bind_param("sss", $newProductCode, $expiryDate, $oldProductCode);
         $stmt->execute();
 
