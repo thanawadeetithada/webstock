@@ -2,17 +2,17 @@
     "packages": [
         {
             "name": "maennchen/zipstream-php",
-            "version": "3.1.1",
-            "version_normalized": "3.1.1.0",
+            "version": "3.0.0",
+            "version_normalized": "3.0.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/maennchen/ZipStream-PHP.git",
-                "reference": "6187e9cc4493da94b9b63eb2315821552015fca9"
+                "reference": "046a8aff706e8baeced0ba5261270f1b42dbdc91"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/maennchen/ZipStream-PHP/zipball/6187e9cc4493da94b9b63eb2315821552015fca9",
-                "reference": "6187e9cc4493da94b9b63eb2315821552015fca9",
+                "url": "https://api.github.com/repos/maennchen/ZipStream-PHP/zipball/046a8aff706e8baeced0ba5261270f1b42dbdc91",
+                "reference": "046a8aff706e8baeced0ba5261270f1b42dbdc91",
                 "shasum": ""
             },
             "require": {
@@ -22,18 +22,18 @@
             },
             "require-dev": {
                 "ext-zip": "*",
-                "friendsofphp/php-cs-fixer": "^3.16",
+                "friendsofphp/php-cs-fixer": "^3.13",
                 "guzzlehttp/guzzle": "^7.5",
                 "mikey179/vfsstream": "^1.6",
                 "php-coveralls/php-coveralls": "^2.5",
-                "phpunit/phpunit": "^10.0",
+                "phpunit/phpunit": "^9.5",
                 "vimeo/psalm": "^5.0"
             },
             "suggest": {
                 "guzzlehttp/psr7": "^2.4",
-                "psr/http-message": "^2.0"
+                "psr/http-message": "^1.0"
             },
-            "time": "2024-10-10T12:33:01+00:00",
+            "time": "2023-02-27T09:49:07+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -70,12 +70,16 @@
             ],
             "support": {
                 "issues": "https://github.com/maennchen/ZipStream-PHP/issues",
-                "source": "https://github.com/maennchen/ZipStream-PHP/tree/3.1.1"
+                "source": "https://github.com/maennchen/ZipStream-PHP/tree/3.0.0"
             },
             "funding": [
                 {
                     "url": "https://github.com/maennchen",
                     "type": "github"
+                },
+                {
+                    "url": "https://opencollective.com/zipstream",
+                    "type": "open_collective"
                 }
             ],
             "install-path": "../maennchen/zipstream-php"
@@ -279,17 +283,17 @@
         },
         {
             "name": "phpoffice/phpspreadsheet",
-            "version": "3.6.0",
-            "version_normalized": "3.6.0.0",
+            "version": "3.5.0",
+            "version_normalized": "3.5.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPOffice/PhpSpreadsheet.git",
-                "reference": "bce5db99872f9613121c3ad033c43318a3789396"
+                "reference": "fb74dcdfa5b538763ab980e977529bc783039aec"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/bce5db99872f9613121c3ad033c43318a3789396",
-                "reference": "bce5db99872f9613121c3ad033c43318a3789396",
+                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/fb74dcdfa5b538763ab980e977529bc783039aec",
+                "reference": "fb74dcdfa5b538763ab980e977529bc783039aec",
                 "shasum": ""
             },
             "require": {
@@ -323,7 +327,7 @@
                 "phpcompatibility/php-compatibility": "^9.3",
                 "phpstan/phpstan": "^1.1",
                 "phpstan/phpstan-phpunit": "^1.0",
-                "phpunit/phpunit": "^10.5",
+                "phpunit/phpunit": "^9.6 || ^10.5",
                 "squizlabs/php_codesniffer": "^3.7",
                 "tecnickcom/tcpdf": "^6.5"
             },
@@ -334,7 +338,7 @@
                 "mpdf/mpdf": "Option for rendering PDF with PDF Writer",
                 "tecnickcom/tcpdf": "Option for rendering PDF with PDF Writer"
             },
-            "time": "2024-12-08T15:04:12+00:00",
+            "time": "2024-11-22T06:41:00+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -380,23 +384,23 @@
             ],
             "support": {
                 "issues": "https://github.com/PHPOffice/PhpSpreadsheet/issues",
-                "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/3.6.0"
+                "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/3.5.0"
             },
             "install-path": "../phpoffice/phpspreadsheet"
         },
         {
             "name": "picqer/php-barcode-generator",
-            "version": "v3.2.0",
-            "version_normalized": "3.2.0.0",
+            "version": "v3.1.0",
+            "version_normalized": "3.1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/picqer/php-barcode-generator.git",
-                "reference": "3ef0b26ebd3996e8bb9e90fa2059a67d2e482b3e"
+                "reference": "5fd1162746cf425dac7734fa09b1f0065b7d86c7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/picqer/php-barcode-generator/zipball/3ef0b26ebd3996e8bb9e90fa2059a67d2e482b3e",
-                "reference": "3ef0b26ebd3996e8bb9e90fa2059a67d2e482b3e",
+                "url": "https://api.github.com/repos/picqer/php-barcode-generator/zipball/5fd1162746cf425dac7734fa09b1f0065b7d86c7",
+                "reference": "5fd1162746cf425dac7734fa09b1f0065b7d86c7",
                 "shasum": ""
             },
             "require": {
@@ -412,7 +416,7 @@
                 "ext-gd": "For JPG and PNG generators, GD or Imagick is required",
                 "ext-imagick": "For JPG and PNG generators, GD or Imagick is required"
             },
-            "time": "2024-10-01T19:35:25+00:00",
+            "time": "2024-09-21T12:50:01+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -464,7 +468,7 @@
             ],
             "support": {
                 "issues": "https://github.com/picqer/php-barcode-generator/issues",
-                "source": "https://github.com/picqer/php-barcode-generator/tree/v3.2.0"
+                "source": "https://github.com/picqer/php-barcode-generator/tree/v3.1.0"
             },
             "install-path": "../picqer/php-barcode-generator"
         },

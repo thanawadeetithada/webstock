@@ -197,18 +197,15 @@ class BaseDrawing implements IComparable
     public function setWorksheet(?Worksheet $worksheet = null, bool $overrideOld = false): self
     {
         if ($this->worksheet === null) {
-            // Add drawing to Worksheet
-            if ($worksheet !== null) {
+            // Add drawing to \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet
+            if ($worksheet !== null && !($this instanceof Drawing && $this->getPath() === '')) {
                 $this->worksheet = $worksheet;
-                if (!($this instanceof Drawing && $this->getPath() === '')) {
-                    $this->worksheet->getCell($this->coordinates);
-                }
-                $this->worksheet->getDrawingCollection()
-                    ->append($this);
+                $this->worksheet->getCell($this->coordinates);
+                $this->worksheet->getDrawingCollection()->append($this);
             }
         } else {
             if ($overrideOld) {
-                // Remove drawing from old Worksheet
+                // Remove drawing from old \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet
                 $iterator = $this->worksheet->getDrawingCollection()->getIterator();
 
                 while ($iterator->valid()) {
@@ -220,10 +217,10 @@ class BaseDrawing implements IComparable
                     }
                 }
 
-                // Set new Worksheet
+                // Set new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet
                 $this->setWorksheet($worksheet);
             } else {
-                throw new PhpSpreadsheetException('A Worksheet has already been assigned. Drawings can only exist on one Worksheet.');
+                throw new PhpSpreadsheetException('A Worksheet has already been assigned. Drawings can only exist on one \\PhpOffice\\PhpSpreadsheet\\Worksheet.');
             }
         }
 
@@ -238,11 +235,6 @@ class BaseDrawing implements IComparable
     public function setCoordinates(string $coordinates): self
     {
         $this->coordinates = $coordinates;
-        if ($this->worksheet !== null) {
-            if (!($this instanceof Drawing && $this->getPath() === '')) {
-                $this->worksheet->getCell($this->coordinates);
-            }
-        }
 
         return $this;
     }

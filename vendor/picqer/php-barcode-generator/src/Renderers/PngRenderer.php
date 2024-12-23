@@ -9,7 +9,7 @@ use Picqer\Barcode\Barcode;
 use Picqer\Barcode\BarcodeBar;
 use Picqer\Barcode\Exceptions\BarcodeException;
 
-class PngRenderer implements RendererInterface
+class PngRenderer
 {
     protected array $foregroundColor = [0, 0, 0];
     protected ?array $backgroundColor = null;
@@ -49,15 +49,9 @@ class PngRenderer implements RendererInterface
         return $this;
     }
 
-    // Floats in width and height will be rounded to integers
-    // For best (and valid) result, use a width as a factor of the width of the Barcode object
-    // Example: $width = $barcode->getWidth() * 3
-    public function render(Barcode $barcode, float $width = 200, float $height = 30): string
+    public function render(Barcode $barcode, int $widthFactor = 2, int $height = 30): string
     {
-        $width = (int)round($width);
-        $height = (int)round($height);
-
-        $widthFactor = $width / $barcode->getWidth();
+        $width = (int)round($barcode->getWidth() * $widthFactor);
 
         if ($this->useImagick) {
             $image = $this->createImagickImageObject($width, $height);
@@ -72,7 +66,7 @@ class PngRenderer implements RendererInterface
         $positionHorizontal = 0;
         /** @var BarcodeBar $bar */
         foreach ($barcode->getBars() as $bar) {
-            $barWidth = $bar->getWidth() * $widthFactor;
+            $barWidth = (int)round(($bar->getWidth() * $widthFactor));
 
             if ($bar->isBar() && $barWidth > 0) {
                 $y = (int)round(($bar->getPositionVertical() * $height / $barcode->getHeight()));
@@ -80,9 +74,9 @@ class PngRenderer implements RendererInterface
 
                 // draw a vertical bar
                 if ($this->useImagick) {
-                    $imagickBarsShape->rectangle((int)round($positionHorizontal), $y, (int)round($positionHorizontal + $barWidth - 1), ($y + $barHeight));
+                    $imagickBarsShape->rectangle($positionHorizontal, $y, ($positionHorizontal + $barWidth - 1), ($y + $barHeight));
                 } else {
-                    \imagefilledrectangle($image, (int)round($positionHorizontal), $y, (int)round($positionHorizontal + $barWidth - 1), ($y + $barHeight), $gdForegroundColor);
+                    \imagefilledrectangle($image, $positionHorizontal, $y, ($positionHorizontal + $barWidth - 1), ($y + $barHeight), $gdForegroundColor);
                 }
             }
             $positionHorizontal += $barWidth;

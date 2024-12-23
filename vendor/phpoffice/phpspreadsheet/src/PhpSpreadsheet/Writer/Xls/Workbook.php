@@ -210,20 +210,8 @@ class Workbook extends BIFFwriter
         $xfWriter->setFontIndex($fontIndex);
 
         // Background colors, best to treat these after the font so black will come after white in custom palette
-        if ($style->getFill()->getStartColor()->getRGB()) {
-            $xfWriter->setFgColor(
-                $this->addColor(
-                    $style->getFill()->getStartColor()->getRGB()
-                )
-            );
-        }
-        if ($style->getFill()->getEndColor()->getRGB()) {
-            $xfWriter->setBgColor(
-                $this->addColor(
-                    $style->getFill()->getEndColor()->getRGB()
-                )
-            );
-        }
+        $xfWriter->setFgColor($this->addColor($style->getFill()->getStartColor()->getRGB()));
+        $xfWriter->setBgColor($this->addColor($style->getFill()->getEndColor()->getRGB()));
         $xfWriter->setBottomColor($this->addColor($style->getBorders()->getBottom()->getColor()->getRGB()));
         $xfWriter->setTopColor($this->addColor($style->getBorders()->getTop()->getColor()->getRGB()));
         $xfWriter->setRightColor($this->addColor($style->getBorders()->getRight()->getColor()->getRGB()));
