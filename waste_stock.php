@@ -173,7 +173,7 @@ if (isset($_POST['search'])) {
 <body>
     <div class="container">
         <div class="search-container">
-            <input type="text" id="search-box" placeholder="ค้นหาสินค้า...">
+            <input type="text" id="search-box" placeholder="ค้นหารหัสสินค้า...">
             <i class="fa-solid fa-magnifying-glass"></i>
             <div class="search-info">
                 <span class="label">วันที่</span> <?=$current_date?>
@@ -191,16 +191,17 @@ if (isset($_POST['search'])) {
                     <th>ราคา/หน่วย</th>
                     <th>รหัสสินค้า</th>
                     <th>วันหมดอายุสินค้า</th>
+                    <th>ตำแหน่งสินค้า</th> 
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td colspan="7">ไม่พบข้อมูลสินค้า</td>
+                    <td colspan="8">ไม่พบข้อมูลสินค้า</td>
                 </tr>
             </tbody>
             <tfoot>
                 <tr id="action-buttons-row">
-                    <td colspan="3" id="total-items-and-quantity"><strong>รวม</strong> 0 <strong>รายการ</strong> 0
+                    <td colspan="4" id="total-items-and-quantity"><strong>รวม</strong> 0 <strong>รายการ</strong> 0
                         <strong>ชิ้น</strong>
                     </td>
                     <td colspan="2" id="total-price">0.00<strong> บาท</strong></td>
@@ -309,7 +310,7 @@ if (isset($_POST['search'])) {
             return input.value;
         });
 
-        const noDataRow = tbody.querySelector('tr td[colspan="7"]');
+        const noDataRow = tbody.querySelector('tr td[colspan="8"]');
         if (noDataRow) {
             noDataRow.parentElement.remove();
         }
@@ -323,7 +324,8 @@ if (isset($_POST['search'])) {
          <td>${product.unit_price}</td>
          <td>${product.product_code}</td>
          <td>${product.expiration_date}</td>
-
+         <td>${product.position}</td>
+ 
         <input type="hidden" name="unit" value="${product.unit}">
         <input type="hidden" name="product_model" value="${product.product_model}">
         <input type="hidden" name="production_date" value="${product.production_date}">
@@ -337,7 +339,7 @@ if (isset($_POST['search'])) {
         <input type="hidden" name="recorder" value="${product.recorder}">
         <input type="hidden" name="category" value="${product.category}">
         <input type="hidden" name="status" value="${product.status}">
-    `;
+     `;
 
         tbody.appendChild(newRow);
         calculateTotalPrice();
@@ -377,7 +379,7 @@ if (isset($_POST['search'])) {
 
         if (tbody.querySelectorAll('tr').length === 0) {
             const noDataRow = document.createElement('tr');
-            noDataRow.innerHTML = `<td colspan="7">ไม่พบข้อมูลสินค้า</td>`;
+            noDataRow.innerHTML = `<td colspan="8">ไม่พบข้อมูลสินค้า</td>`;
             tbody.appendChild(noDataRow);
         }
 

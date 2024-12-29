@@ -58,14 +58,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         (sell_id, product_code, product_name, quantity, unit_price, expiration_date, 
                          product_model, production_date, shelf_life, sticker_color, reminder_date, 
                          received_date, unit, unit_cost, sender_code, sender_company, recorder, 
-                         category, status) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                         category, status, position) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt_details = $conn->prepare($sql_details);
 
         foreach ($products as $detail) {
             $status = 'SELL';
             $stmt_details->bind_param(
-                "issidsssissssdsssss",
+                "issidsssissssdssssss",
                 $sell_id,
                 $detail['product_code'],
                 $detail['product_name'],
@@ -84,7 +84,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $detail['sender_company'],
                 $detail['recorder'],
                 $detail['category'],
-                $status
+                $status,
+                $detail['position']
+                
             );
 
             if (!$stmt_details->execute()) {

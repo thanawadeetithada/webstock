@@ -8,7 +8,7 @@ if (isset($_GET['startDate']) && isset($_GET['endDate'])) {
     $startDate = $_GET['startDate'];
     $endDate = $_GET['endDate'];
 
-    $sql = "SELECT product_code, product_name, quantity, unit, unit_cost, received_date, expiration_date, sticker_color, category 
+    $sql = "SELECT product_code, product_name, quantity, unit, unit_cost, received_date, expiration_date, sticker_color, category, position
             FROM products 
             WHERE expiration_date BETWEEN ? AND ?";
     $stmt = $conn->prepare($sql);

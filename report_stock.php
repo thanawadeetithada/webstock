@@ -3,14 +3,14 @@ session_start();
 include 'include/header.php';
 include 'config.php';
 
-$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, received_date, expiration_date AS stock_date, sticker_color, category, status
+$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, received_date, expiration_date AS stock_date, sticker_color, category, status, position
         FROM products
         WHERE expiration_date < CURDATE()
         UNION ALL
-        SELECT product_code, product_name, quantity, unit, unit_cost, received_date, out_date AS stock_date, sticker_color, category, status
+        SELECT product_code, product_name, quantity, unit, unit_cost, received_date, out_date AS stock_date, sticker_color, category, status, position
         FROM out_product_details
         UNION ALL
-        SELECT product_code, product_name, quantity, unit, unit_cost, received_date, sell_date AS stock_date, sticker_color, category, status
+        SELECT product_code, product_name, quantity, unit, unit_cost, received_date, sell_date AS stock_date, sticker_color, category, status, position
         FROM sell_product_details";
 
 $result = $conn->query($sql);
@@ -252,11 +252,12 @@ $sticker_styles = [
                     <th>ราคา</th>
                     <th>วันตัดสต็อก</th>
                     <th>สถานะ</th>
+                    <th>ตำแหน่งสินค้า</th>
                 </tr>
             </thead>
             <tbody id="product-table-body">
                 <tr>
-                    <td colspan="9">กรุณาค้นหาข้อมูล</td>
+                    <td colspan="10">กรุณาค้นหาข้อมูล</td>
                 </tr>
             </tbody>
         </table>
@@ -276,7 +277,12 @@ $sticker_styles = [
         XLSX.utils.book_append_sheet(wb, ws, "รายงานสินค้า");
 
         // ตั้งชื่อไฟล์
-        const fileName = `รายงานสินค้า_${startDate}_ถึง_${endDate}.xlsx`;
+        let fileName;
+        if (startDate === "ไม่ระบุ" && endDate === "ไม่ระบุ") {
+            fileName = "รายงานสินค้าทั้งหมด.xlsx";
+        } else {
+            fileName = `รายงานสินค้า_${startDate}_ถึง_${endDate}.xlsx`;
+        }
 
         // ดาวน์โหลดไฟล์ Excel
         XLSX.writeFile(wb, fileName);
@@ -290,14 +296,14 @@ $sticker_styles = [
         tableBody.innerHTML = "";
 
         if (!products || products.length === 0) {
-            tableBody.innerHTML = "<tr><td colspan='9'>ไม่พบข้อมูลสินค้า</td></tr>";
+            tableBody.innerHTML = "<tr><td colspan='10'>ไม่พบข้อมูลสินค้า</td></tr>";
         } else {
 
             products.sort((a, b) => new Date(a.stock_date) - new Date(b.stock_date));
 
             products.forEach((row, index) => {
                 const stickerStyle = stickerStyles[row.sticker_color] || "";
-                let statusText = '-'; // ค่าเริ่มต้น
+                let statusText = '-';
                 if (row.status === 'active') {
                     statusText = 'หมดอายุ';
                 } else if (row.status === 'SELL') {
@@ -316,11 +322,13 @@ $sticker_styles = [
                 <td style="${stickerStyle}">${row.sticker_color || '-'}</td>
                 <td>${row.stock_date || '-'}</td>
                 <td>${statusText}</td>
+                <td>${row.position || '-'}</td>
             </tr>`;
                 tableBody.insertAdjacentHTML("beforeend", newRow);
             });
         }
     }
+
     document.addEventListener("DOMContentLoaded", () => {
         displayProducts(allProducts);
     });

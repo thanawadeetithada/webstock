@@ -38,6 +38,7 @@ try {
             recorder = ?,
             unit_price = ?,
             category = ?,
+            position = ?,
             updated_at = NOW()
         WHERE product_code = ?"
         );
@@ -61,9 +62,10 @@ try {
         $recorder = $data['recorder'] ?? null;
         $unit_price = $data['unit_price'] ?? 0.0;
         $category = $data['category'] ?? null;
+        $position = $data['position'] ?? null;
 
         $stmt->bind_param(
-            "sssissssisdsssdss",
+            "sssissssisdsssdsss",
             $data['product_name'],
             $product_model,
             $production_date,
@@ -80,6 +82,7 @@ try {
             $recorder,
             $unit_price,
             $category,
+            $position,
             $product_code
         );
 
@@ -93,8 +96,8 @@ try {
             "INSERT INTO products (
                 product_code, product_name, product_model, production_date, shelf_life,
                 expiration_date, sticker_color, reminder_date, received_date, quantity,
-                unit, unit_cost, sender_code, sender_company, recorder, unit_price, category, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
+                unit, unit_cost, sender_code, sender_company, recorder, unit_price, category, position, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
         );
 
         if (!$stmt) {
@@ -116,9 +119,10 @@ try {
         $recorder = $data['recorder'] ?? null;
         $unit_price = $data['unit_price'] ?? 0.0;
         $category = $data['category'] ?? null;
+        $position = $data['position'] ?? null;
 
         $stmt->bind_param(
-            "ssssissssisdsssds",
+            "ssssissssisdsssdss",
             $data['product_code'],
             $data['product_name'],
             $product_model,
@@ -135,7 +139,8 @@ try {
             $sender_company,
             $recorder,
             $unit_price,
-            $category
+            $category,
+            $position
         );
 
         if (!$stmt->execute()) {

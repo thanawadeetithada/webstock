@@ -347,6 +347,10 @@ if (!isset($_SESSION['user_id'])) {
                 <label for="category">หมวดหมู่สินค้า</label>
                 <input type="text" id="category" name="category" required>
             </div>
+            <div class="form-row">
+                <label for="position">ตำแหน่งสินค้า</label>
+                <input type="text" id="position" name="position" required>
+            </div>
             <div class="submit-button">
                 <button type="button" class="btn btn-primary" id="confirmButton">บันทึกข้อมูล</button>
                 <button type="reset" class="btn btn-secondary" id="resetButton">ล้างข้อมูล</button>
@@ -602,6 +606,7 @@ if (!isset($_SESSION['user_id'])) {
                             <input type="hidden" name="recorder" value="${product.recorder}">
                             <input type="hidden" name="category" value="${product.category}">
                             <input type="hidden" name="status" value="${product.status}">
+                            <input type="hidden" name="position" value="${product.position}">
                             <td><button class="btn btn-warning btn-sm warning-row" data-code="${product.product_code}">แก้ไข</button></td>`;
                             edittableBody.appendChild(row);
                         });
@@ -977,6 +982,7 @@ if (!isset($_SESSION['user_id'])) {
                     formData.append('recorder', row[14] || '');
                     formData.append('unit_price', row[15] || '');
                     formData.append('category', row[16] || '');
+                    formData.append('position', row[17] || '');
 
                     fetch('import_excel.php', {
                             method: 'POST',

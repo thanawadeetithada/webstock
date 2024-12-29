@@ -49,6 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     $recorder = $_POST['recorder'];
     $unit_price = $_POST['unit_price'];
     $category = $_POST['category'];
+    $position = $_POST['position'];
 
     $check_sql = "SELECT * FROM products WHERE product_code = ?";
     $stmt_check = $conn->prepare($check_sql);
@@ -61,15 +62,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
                     product_name = ?, product_model = ?, production_date = ?, shelf_life = ?,
                     expiration_date = ?, sticker_color = ?, reminder_date = ?, received_date = ?,
                     quantity = ?, unit = ?, unit_cost = ?, sender_code = ?, sender_company = ?,
-                    recorder = ?, unit_price = ?, category = ?
+                    recorder = ?, unit_price = ?, category = ?, position = ?
                 WHERE product_code = ?";
 
         $stmt = $conn->prepare($sql);
         $stmt->bind_param(
-            "sssisssisdsssdsss",
+            "sssisssisdsssdssss",
             $product_name, $product_model, $production_date, $shelf_life, $expiration_date,
             $sticker_color, $reminder_date, $received_date, $quantity, $unit, $unit_cost,
-            $sender_code, $sender_company, $recorder, $unit_price, $category, $product_code
+            $sender_code, $sender_company, $recorder, $unit_price, $category, $position, $product_code
         );
 
         if ($stmt->execute()) {
@@ -84,17 +85,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
         $sql = "INSERT INTO products (
     product_code, product_name, product_model, production_date, shelf_life,
     expiration_date, sticker_color, reminder_date, received_date, quantity,
-    unit, unit_cost, sender_code, sender_company, recorder, unit_price, category
+    unit, unit_cost, sender_code, sender_company, recorder, unit_price, category, position
 ) VALUES (
-    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 )";
 
         $stmt = $conn->prepare($sql);
         $stmt->bind_param(
-            "ssssissssisdsssds",
+            "ssssissssisdsssdss",
             $product_code, $product_name, $product_model, $production_date, $shelf_life,
             $expiration_date, $sticker_color, $reminder_date, $received_date, $quantity,
-            $unit, $unit_cost, $sender_code, $sender_company, $recorder, $unit_price, $category
+            $unit, $unit_cost, $sender_code, $sender_company, $recorder, $unit_price, $category, $position
         );
 
         if ($stmt->execute()) {

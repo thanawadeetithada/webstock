@@ -110,10 +110,6 @@ $qr_code_image = '/webstock/img/QR.jpg';
         // แปลงข้อมูลจาก PHP เป็น JSON และส่งไปยัง JavaScript
         const products = <?= json_encode($products) ?>;
         const totalPrice = <?= json_encode($total_price) ?>;
-
-        // ใช้ console.log() เพื่อพิมพ์ข้อมูลใน Developer Tools
-        console.log("ข้อมูลสินค้า:", products);
-        console.log("ยอดชำระเงินทั้งหมด:", totalPrice);
     </script>
 </head>
 

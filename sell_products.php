@@ -173,7 +173,7 @@ if (isset($_POST['search'])) {
 <body>
     <div class="container">
         <div class="search-container">
-            <input type="text" id="search-box" placeholder="ค้นหาสินค้า...">
+            <input type="text" id="search-box" placeholder="ค้นหารหัสสินค้า...">
             <i class="fa-solid fa-magnifying-glass"></i>
             <div class="search-info">
                 <span class="label">วันที่</span> <?=$current_date?>
@@ -333,6 +333,7 @@ if (isset($_POST['search'])) {
         <input type="hidden" name="recorder" value="${product.recorder}">
         <input type="hidden" name="category" value="${product.category}">
         <input type="hidden" name="status" value="${product.status}">
+        <input type="hidden" name="position" value="${product.position}">
     `;
 
         tbody.appendChild(newRow);

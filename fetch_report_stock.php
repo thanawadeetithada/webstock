@@ -15,33 +15,33 @@ try {
 
     if ($status === 'ทั้งหมด' || $status === '') {
         $query = "
-            SELECT product_code, product_name, quantity, unit, unit_cost, received_date, expiration_date AS stock_date, sticker_color, category, status 
+            SELECT product_code, product_name, quantity, unit, unit_cost, received_date, expiration_date AS stock_date, sticker_color, category, status, position 
             FROM products 
             WHERE expiration_date BETWEEN '$startDate' AND '$endDate'
             UNION ALL
-            SELECT product_code, product_name, quantity, unit, unit_cost, received_date, out_date AS stock_date, sticker_color, category, status 
+            SELECT product_code, product_name, quantity, unit, unit_cost, received_date, out_date AS stock_date, sticker_color, category, status, position
             FROM out_product_details 
             WHERE out_date BETWEEN '$startDate' AND '$endDate'
             UNION ALL
-            SELECT product_code, product_name, quantity, unit, unit_cost, received_date, sell_date AS stock_date, sticker_color, category, status 
+            SELECT product_code, product_name, quantity, unit, unit_cost, received_date, sell_date AS stock_date, sticker_color, category, status, position
             FROM sell_product_details 
             WHERE sell_date BETWEEN '$startDate' AND '$endDate'
         ";
     } elseif ($status === 'SELL') {
         $query = "
-            SELECT product_code, product_name, quantity, unit, unit_cost, received_date, sell_date AS stock_date, sticker_color, category, status 
+            SELECT product_code, product_name, quantity, unit, unit_cost, received_date, sell_date AS stock_date, sticker_color, category, status, position
             FROM sell_product_details 
             WHERE sell_date BETWEEN '$startDate' AND '$endDate'
         ";
     } elseif ($status === 'OUT') {
         $query = "
-            SELECT product_code, product_name, quantity, unit, unit_cost, received_date, out_date AS stock_date, sticker_color, category, status 
+            SELECT product_code, product_name, quantity, unit, unit_cost, received_date, out_date AS stock_date, sticker_color, category, status, position
             FROM out_product_details 
             WHERE out_date BETWEEN '$startDate' AND '$endDate'
         ";
     } elseif ($status === 'active') {
         $query = "
-            SELECT product_code, product_name, quantity, unit, unit_cost, received_date, expiration_date AS stock_date, sticker_color, category, status 
+            SELECT product_code, product_name, quantity, unit, unit_cost, received_date, expiration_date AS stock_date, sticker_color, category, status, position
             FROM products 
             WHERE expiration_date < CURDATE() 
             AND expiration_date BETWEEN '$startDate' AND '$endDate'

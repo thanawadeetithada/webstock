@@ -36,13 +36,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt_details = $conn->prepare(
             "INSERT INTO out_product_details (out_id, product_code, product_name, quantity, unit_price, expiration_date,
             product_model, production_date, shelf_life, sticker_color, reminder_date, received_date, unit, unit_cost,
-            sender_code, sender_company, recorder, category, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            sender_code, sender_company, recorder, category, status, position)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
         foreach ($products as $product) {
             $status = 'OUT';
             $stmt_details->bind_param(
-                "issidsssissssdsssss",
+                "issidsssissssdssssss",
                 $out_id,
                 $product['product_code'],
                 $product['product_name'],
@@ -61,7 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $product['sender_company'],
                 $product['recorder'],
                 $product['category'],
-                $status
+                $status,
+                $product['position']
             );
             if (!$stmt_details->execute()) {
                 throw new Exception("เกิดข้อผิดพลาดในการบันทึก sell_product_details: " . $stmt_details->error);

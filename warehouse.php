@@ -21,7 +21,7 @@ $result_category = $conn->query($sql_category);
 $sql_unit = "SELECT DISTINCT unit FROM products";
 $result_unit = $conn->query($sql_unit);
 
-$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiration_date, sticker_color, category 
+$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiration_date, sticker_color, category , position
         FROM products WHERE expiration_date >= CURRENT_DATE";
 
 $result = $conn->query($sql);

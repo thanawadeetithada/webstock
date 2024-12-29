@@ -7,14 +7,14 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 include 'config.php';
 
 // Query ดึงข้อมูล
-$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, received_date, expiration_date AS stock_date, sticker_color, category, status
+$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, received_date, expiration_date AS stock_date, sticker_color, category, status, position
         FROM products
         WHERE expiration_date < CURDATE()
         UNION ALL
-        SELECT product_code, product_name, quantity, unit, unit_cost, received_date, out_date AS stock_date, sticker_color, category, status
+        SELECT product_code, product_name, quantity, unit, unit_cost, received_date, out_date AS stock_date, sticker_color, category, status, position
         FROM out_product_details
         UNION ALL
-        SELECT product_code, product_name, quantity, unit, unit_cost, received_date, sell_date AS stock_date, sticker_color, category, status
+        SELECT product_code, product_name, quantity, unit, unit_cost, received_date, sell_date AS stock_date, sticker_color, category, status, position
         FROM sell_product_details";
 
 $result = $conn->query($sql);
@@ -24,7 +24,7 @@ $spreadsheet = new Spreadsheet();
 $sheet = $spreadsheet->getActiveSheet();
 
 // หัวตาราง
-$header = ['รหัสสินค้า', 'ชื่อสินค้า', 'จำนวน', 'หน่วย', 'ราคา', 'วันที่ตัดสต็อก', 'สีสติ๊กเกอร์', 'หมวดหมู่gg', 'หมวดหมู่','สถานะ'];
+$header = ['รหัสสินค้า', 'ชื่อสินค้า', 'จำนวน', 'หน่วย', 'ราคา', 'วันที่ตัดสต็อก', 'สีสติ๊กเกอร์', 'หมวดหมู่gg', 'หมวดหมู่','สถานะ', 'ตำแหน่ง'];
 $sheet->fromArray($header, NULL, 'A1');
 
 // เพิ่มข้อมูล
