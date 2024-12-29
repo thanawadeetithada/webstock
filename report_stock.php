@@ -291,6 +291,14 @@ $sticker_styles = [
     const allProducts = <?php echo json_encode($allProducts); ?>;
     const stickerStyles = <?php echo json_encode($sticker_styles); ?>;
 
+    function formatPosition(position) {
+        if (!position || position.length < 3) return position;
+        const row = position[0];
+        const floor = position[1];
+        const slot = position[2];
+        return `แถว ${row} ชั้น ${floor} ช่อง ${slot}`;
+    }
+
     function displayProducts(products) {
         const tableBody = document.getElementById("product-table-body");
         tableBody.innerHTML = "";
@@ -322,7 +330,7 @@ $sticker_styles = [
                 <td style="${stickerStyle}">${row.sticker_color || '-'}</td>
                 <td>${row.stock_date || '-'}</td>
                 <td>${statusText}</td>
-                <td>${row.position || '-'}</td>
+                <td>${formatPosition(row.position) || '-'}</td>
             </tr>`;
                 tableBody.insertAdjacentHTML("beforeend", newRow);
             });

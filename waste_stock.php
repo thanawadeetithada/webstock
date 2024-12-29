@@ -188,15 +188,16 @@ if (isset($_POST['search'])) {
                     <th>No.</th>
                     <th>ชื่อสินค้า</th>
                     <th>จำนวน</th>
+                    <th>หน่วย</th>
                     <th>ราคา/หน่วย</th>
                     <th>รหัสสินค้า</th>
                     <th>วันหมดอายุสินค้า</th>
-                    <th>ตำแหน่งสินค้า</th> 
+                    <th>ตำแหน่งสินค้า</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td colspan="8">ไม่พบข้อมูลสินค้า</td>
+                    <td colspan="9">ไม่พบข้อมูลสินค้า</td>
                 </tr>
             </tbody>
             <tfoot>
@@ -204,7 +205,7 @@ if (isset($_POST['search'])) {
                     <td colspan="4" id="total-items-and-quantity"><strong>รวม</strong> 0 <strong>รายการ</strong> 0
                         <strong>ชิ้น</strong>
                     </td>
-                    <td colspan="2" id="total-price">0.00<strong> บาท</strong></td>
+                    <td colspan="3" id="total-price">0.00<strong> บาท</strong></td>
                     <td colspan="2" class="form-btn">
                         <form id="payment-form" action="process_out_stock.php" method="POST">
                             <input type="hidden" name="products" id="products-input">
@@ -303,6 +304,14 @@ if (isset($_POST['search'])) {
         document.getElementById('total-price').innerHTML = totalPrice.toFixed(2) + ' <strong>บาท</strong>';
     }
 
+    function formatPosition(position) {
+        if (!position || position.length < 3) return position;
+        const row = position[0];
+        const floor = position[1];
+        const slot = position[2];
+        return `แถว ${row} ชั้น ${floor} ช่อง ${slot}`;
+    }
+
     function addProductToTable(product) {
         const tbody = document.querySelector('table tbody');
 
@@ -310,7 +319,7 @@ if (isset($_POST['search'])) {
             return input.value;
         });
 
-        const noDataRow = tbody.querySelector('tr td[colspan="8"]');
+        const noDataRow = tbody.querySelector('tr td[colspan="9"]');
         if (noDataRow) {
             noDataRow.parentElement.remove();
         }
@@ -319,12 +328,13 @@ if (isset($_POST['search'])) {
         newRow.innerHTML = `
        <td><input type="checkbox"></td>
         <td>${tbody.rows.length + 1}</td>
-         <td>${product.product_name}</td>
+        <td>${product.product_name}</td>
         <td>${product.quantity}</td>
-         <td>${product.unit_price}</td>
-         <td>${product.product_code}</td>
-         <td>${product.expiration_date}</td>
-         <td>${product.position}</td>
+        <td>${product.unit}</td>
+        <td>${product.unit_price}</td>
+        <td>${product.product_code}</td>
+        <td>${product.expiration_date}</td>
+        <td>${formatPosition(product.position)}</td>
  
         <input type="hidden" name="unit" value="${product.unit}">
         <input type="hidden" name="product_model" value="${product.product_model}">
@@ -379,7 +389,7 @@ if (isset($_POST['search'])) {
 
         if (tbody.querySelectorAll('tr').length === 0) {
             const noDataRow = document.createElement('tr');
-            noDataRow.innerHTML = `<td colspan="8">ไม่พบข้อมูลสินค้า</td>`;
+            noDataRow.innerHTML = `<td colspan="9">ไม่พบข้อมูลสินค้า</td>`;
             tbody.appendChild(noDataRow);
         }
 
