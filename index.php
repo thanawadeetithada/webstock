@@ -310,24 +310,24 @@ if (isset($_POST['register'])) {
                         <?php endif; ?>
                         <div class="form-group">
                             <input type="text" name="username" id="username" class="form-control rounded-pill"
-                                placeholder="Username"
+                                placeholder="ชื่อผู้ใช้"
                                 value="<?php echo isset($username_input) ? htmlspecialchars($username_input) : ''; ?>"
                                 required>
                         </div>
                         <div class="form-group">
                             <input type="email" name="email" id="email" class="form-control rounded-pill"
-                                placeholder="Email Address"
+                                placeholder="ที่อยู่อีเมลล์"
                                 value="<?php echo isset($email_input) ? htmlspecialchars($email_input) : ''; ?>"
                                 required>
                         </div>
                         <div class="form-group password">
                             <input type="password" name="password" id="registerPassword"
-                                class="form-control rounded-pill" placeholder="Password" required>
+                                class="form-control rounded-pill" placeholder="รหัสผ่าน" required>
                             <i class="fa fa-eye-slash toggle-password" data-target="registerPassword"></i>
                         </div>
                         <div class="form-group password">
                             <input type="password" name="confirm_password" id="confirmPassword"
-                                class="form-control rounded-pill" placeholder="Confirm" required>
+                                class="form-control rounded-pill" placeholder="ยืนยันรหัสผ่าน" required>
                             <i class="fa fa-eye-slash toggle-password" data-target="confirmPassword"></i>
                         </div>
                     </div>
