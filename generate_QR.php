@@ -18,6 +18,7 @@ if (!isset($_SESSION['user_id'])) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $oldProductCode = $_POST['oldProductCode'];
     $expiryDate = $_POST['expiryDate'];
+    $position = $_POST['position']; 
 
     if (!empty($oldProductCode) && !empty($expiryDate)) {
         // แปลงวันที่จาก YYYY-MM-DD เป็น DDMMYY
@@ -27,8 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $newProductCode = $oldProductCode . 'E' . $formattedDate;
 
         // อัปเดตข้อมูลในฐานข้อมูล (update แทน insert)
-        $stmt = $conn->prepare("UPDATE products SET product_code = ?, expiration_date = ? WHERE product_code = ?");
-        $stmt->bind_param("sss", $newProductCode, $expiryDate, $oldProductCode);
+        $stmt = $conn->prepare("UPDATE products SET product_code = ?, expiration_date = ?, position = ? WHERE product_code = ?");
+        $stmt->bind_param("ssss", $newProductCode, $expiryDate, $position, $oldProductCode);
         $stmt->execute();
 
         // สร้างบาร์โค้ด
@@ -142,11 +143,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 
     <style>
-   body {
+    body {
         font-family: Arial, sans-serif;
         background-color: #f9f9f9;
         margin: 0;
-        padding:  0px 20px 10px 20px;
+        padding: 0px 20px 10px 20px;
     }
 
     .container {
@@ -179,7 +180,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         justify-content: center;
         margin-bottom: 2.5rem;
     }
-    .select2-container--default .select2-selection--single{
+
+    .select2-container--default .select2-selection--single {
         height: 38px;
         border: 1px solid #ced4da;
     }
@@ -189,6 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         display: flex;
         align-items: center;
     }
+
     .select2-container--default .select2-selection--single .select2-selection__clear {
         display: none;
     }
@@ -208,11 +211,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <select class="form-control" id="oldProductCode" name="oldProductCode" required>
                         <option value="">เลือกสินค้าจากรายการ</option>
                         <?php
-// ดึงข้อมูลจากฐานข้อมูล
 $query = "SELECT product_code FROM products";
 $result = $conn->query($query);
-
-// แสดงรหัสสินค้าทั้งหมดใน dropdown
 while ($row = $result->fetch_assoc()) {
     echo '<option value="' . htmlspecialchars($row['product_code']) . '">' . htmlspecialchars($row['product_code']) . '</option>';
 }
@@ -222,6 +222,11 @@ while ($row = $result->fetch_assoc()) {
                 <div class="form-group">
                     <label for="expiryDate">วันหมดอายุ</label>
                     <input type="date" class="form-control" id="expiryDate" name="expiryDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="position">ตำแหน่งสินค้า</label>
+                    <input type="text" class="form-control" id="position" name="position"
+                        placeholder="กรอกตำแหน่งสินค้า">
                 </div>
             </div>
             <div class="center-button">
@@ -242,11 +247,46 @@ while ($row = $result->fetch_assoc()) {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
-    $(document).ready(function() {
-        $('#oldProductCode').select2({
-            placeholder: 'เลือกสินค้าจากรายการ',
-            allowClear: true
-        });
+$(document).ready(function() {
+    $('#oldProductCode').select2({
+        placeholder: 'เลือกสินค้าจากรายการ',
+        allowClear: true
     });
+
+    // เมื่อมีการเปลี่ยนค่าใน select
+    $('#oldProductCode').on('change', function() {
+        const selectedCode = $(this).val();
+
+        if (selectedCode) {
+            // ส่ง AJAX เพื่อดึงข้อมูลสินค้า
+            $.ajax({
+                url: 'get_product_details.php', // URL ของไฟล์ที่ใช้ดึงข้อมูล
+                method: 'GET',
+                data: {
+                    product_code: selectedCode
+                },
+                success: function(response) {
+                    const data = JSON.parse(response);
+
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        // เติมข้อมูลลงในฟอร์ม
+                        $('#expiryDate').val(data.expiration_date);
+                        $('#position').val(data.position);
+                    }
+                },
+                error: function() {
+                    alert('เกิดข้อผิดพลาดในการดึงข้อมูลสินค้า');
+                }
+            });
+        } else {
+            // เคลียร์ค่าเมื่อไม่มีการเลือกสินค้า
+            $('#expiryDate').val('');
+            $('#position').val('');
+        }
+    });
+});
 </script>
+
 </html>
