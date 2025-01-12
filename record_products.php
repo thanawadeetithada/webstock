@@ -349,7 +349,7 @@ if (!isset($_SESSION['user_id'])) {
             </div>
             <div class="form-row">
                 <label for="position">ตำแหน่งสินค้า</label>
-                <input type="text" id="position" name="position" required>
+                <input type="text" id="position" placeholder="(A15) แถว A ชั้น 1 ช่อง 5" name="position" required>
             </div>
             <div class="submit-button">
                 <button type="button" class="btn btn-primary" id="confirmButton">บันทึกข้อมูล</button>

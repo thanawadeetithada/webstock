@@ -3,14 +3,14 @@ session_start();
 include 'include/header.php';
 include 'config.php';
 
-$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, received_date, expiration_date AS stock_date, sticker_color, category, status, position
+$sql = "SELECT product_code, product_name, quantity, unit, unit_cost, unit_price, received_date, expiration_date AS stock_date, sticker_color, category, status, position
         FROM products
         WHERE expiration_date < CURDATE()
         UNION ALL
-        SELECT product_code, product_name, quantity, unit, unit_cost, received_date, out_date AS stock_date, sticker_color, category, status, position
+        SELECT product_code, product_name, quantity, unit, unit_cost, unit_price, received_date, out_date AS stock_date, sticker_color, category, status, position
         FROM out_product_details
         UNION ALL
-        SELECT product_code, product_name, quantity, unit, unit_cost, received_date, sell_date AS stock_date, sticker_color, category, status, position
+        SELECT product_code, product_name, quantity, unit, unit_cost, unit_price, received_date, sell_date AS stock_date, sticker_color, category, status, position
         FROM sell_product_details";
 
 $result = $conn->query($sql);
@@ -232,7 +232,7 @@ $sticker_styles = [
                         <option value="">ทั้งหมด</option>
                         <option value="active">หมดอายุ</option>
                         <option value="SELL">ขาย</option>
-                        <option value="OUT">ตัดสต็อก</option>
+                        <option value="OUT">เสียหาย</option>
                     </select>
                 </div>
             </div>
@@ -248,8 +248,9 @@ $sticker_styles = [
                     <th>ชื่อสินค้า</th>
                     <th>จำนวน</th>
                     <th>หน่วย</th>
+                    <th>ราคาทุน</th>
+                    <th>ราคาขาย</th>
                     <th>สีสติ๊กเกอร์</th>
-                    <th>ราคา</th>
                     <th>วันตัดสต็อก</th>
                     <th>สถานะ</th>
                     <th>ตำแหน่งสินค้า</th>
@@ -317,7 +318,7 @@ $sticker_styles = [
                 } else if (row.status === 'SELL') {
                     statusText = 'ขาย';
                 } else if (row.status === 'OUT') {
-                    statusText = 'ตัดสต็อก';
+                    statusText = 'เสียหาย';
                 }
                 const newRow = `
             <tr>
@@ -327,7 +328,8 @@ $sticker_styles = [
                 <td>${row.quantity || '-'}</td>
                 <td>${row.unit || '-'}</td>
                 <td>${row.unit_cost || '-'}</td>
-                <td style="${stickerStyle}">${row.sticker_color || '-'}</td>
+                <td>${row.unit_price || '-'}</td>
+                <td><button style="${stickerStyle}" disabled>${row.sticker_color || '-'}</button></td>
                 <td>${row.stock_date || '-'}</td>
                 <td>${statusText}</td>
                 <td>${formatPosition(row.position) || '-'}</td>

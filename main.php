@@ -25,7 +25,7 @@ if (!isset($_SESSION['user_id'])) {
 
 body {
     font-family: 'Arial', sans-serif;
-    background-color: #9B9AFF;
+    background-color:rgb(250, 250, 250);
     color: #333;
 }
 

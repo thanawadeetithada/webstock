@@ -15,7 +15,7 @@ $total_items = 0;
 $total_quantity = 0;
 $total_price = 0;
 $current_date = date('d/m/Y');
-$current_time = date('H:i:s');
+$current_time = date(format: 'H:i:s');
 
 if (isset($_POST['search'])) {
     $search_code = $_POST['search'];

@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $image = imagecreatetruecolor($newWidth, $finalHeight);
 
         // สร้างสีพื้นหลังสีเขียวอ่อน
-        $backgroundColor = imagecolorallocate($image, 204, 255, 204);
+        $backgroundColor = imagecolorallocate($image, 255, 255, 255); // เปลี่ยนสี
         $textColor = imagecolorallocate($image, 0, 0, 0);
 
         // เติมสีพื้นหลัง
@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         // ข้อความ "ควรบริโภคก่อนวันที่"
-        $consumeBeforeText = "ควรบริโภคก่อนวันที่ : " . date('d/m/Y', strtotime($expiryDate));
+        $consumeBeforeText = "EXP : " . date('d/m/Y', strtotime($expiryDate));
 
         // คำนวณความกว้างของข้อความ
         $textBoxConsume = imagettfbbox($fontSize, 0, $font, $consumeBeforeText);
@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $rightX = $outerWidth - $textWidthConsume - 10;
 
         // แสดงข้อความ "ควรบริโภคก่อนวันที่" ที่ขวาสุด
-        imagettftext($outerImage, $fontSize, 0, $rightX, $outerHeight - 10, $textColor, $font, $consumeBeforeText);
+        imagettftext($outerImage, $fontSize, 0, $rightX, $outerHeight - 5, $textColor, $font, $consumeBeforeText);
 
         // บันทึกภาพ
         $barcodeFile = 'barcodes/' . $newProductCode . '.png';
@@ -199,6 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     .select2-container--default .select2-selection--single .select2-selection__arrow {
         height: 100%;
     }
+    
     </style>
 </head>
 
@@ -235,7 +236,7 @@ while ($row = $result->fetch_assoc()) {
             <?php if (!empty($newProductCode) && !empty($barcodeFile)): ?>
             <div class="text-center mt-4">
                 <h5>รหัสใหม่ของสินค้า: <?php echo htmlspecialchars($newProductCode); ?></h5>
-                <img src="<?php echo htmlspecialchars($barcodeFile); ?>" alt="Barcode">
+                <img style="border: 1px solid;padding: 0px 15px;" src="<?php echo htmlspecialchars($barcodeFile); ?>" alt="Barcode">
             </div>
             <?php elseif (!empty($error)): ?>
             <div class="alert alert-danger mt-4"><?php echo htmlspecialchars($error); ?></div>
