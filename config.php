@@ -1,7 +1,7 @@
 <?php
 // ตรวจสอบว่า session ยังไม่ได้เริ่มต้นให้เริ่มต้น session
 if (session_status() === PHP_SESSION_NONE) {
-    session_start(); // เริ่ม sessio
+    session_start(); 
 }
 
 // กำหนดค่าการเชื่อมต่อฐานข้อมูล
