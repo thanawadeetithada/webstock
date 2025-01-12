@@ -41,11 +41,13 @@ if (isset($_POST['register'])) {
     $email = trim($_POST['email']);
     $password = trim($_POST['password']);
     $confirm_password = trim($_POST['confirm_password']);
+    $telegram_chat_id = isset($_POST['telegram_chat_id']) ? trim($_POST['telegram_chat_id']) : null;
 
     if ($password !== $confirm_password) {
         $error_message = "รหัสผ่านไม่ตรงกัน!";
         $username_input = $username;
         $email_input = $email;
+        $telegram_chat_id_input = $telegram_chat_id;
         echo "<script>
             $(document).ready(function() {
                 $('#registerModal').modal('show');
@@ -68,6 +70,7 @@ if (isset($_POST['register'])) {
             $error_message = "อีเมลนี้มีการสมัครสมาชิกแล้ว!";
             $username_input = $username;
             $email_input = $email;
+            $telegram_chat_id_input = $telegram_chat_id;
             echo "<script>
                 $(document).ready(function() {
                     $('#registerModal').modal('show');
@@ -78,6 +81,7 @@ if (isset($_POST['register'])) {
             $error_message = "ชื่อผู้ใช้งานนี้มีการสมัครสมาชิกแล้ว!";
             $username_input = $username;
             $email_input = $email;
+            $telegram_chat_id_input = $telegram_chat_id;
             echo "<script>
                 $(document).ready(function() {
                     $('#registerModal').modal('show');
@@ -86,10 +90,9 @@ if (isset($_POST['register'])) {
         } else {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-            $sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
+            $sql = "INSERT INTO users (username, email, password, telegram_chat_id) VALUES (?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
-            
-            $stmt->bind_param("sss", $username, $email, $hashed_password);
+            $stmt->bind_param("ssss", $username, $email, $hashed_password, $telegram_chat_id);
 
             if ($stmt->execute()) {
                 $show_success_modal = true;
@@ -361,6 +364,11 @@ if (isset($_POST['register'])) {
                                 placeholder="ที่อยู่อีเมลล์"
                                 value="<?php echo isset($email_input) ? htmlspecialchars($email_input) : ''; ?>"
                                 required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" name="telegram_chat_id" id="telegram_chat_id"
+                                class="form-control rounded-pill" placeholder="Telegram Chat ID"
+                                value="<?php echo isset($telegram_chat_id_input) ? htmlspecialchars($telegram_chat_id_input) : ''; ?>">
                         </div>
                         <div class="form-group password">
                             <input type="password" name="password" id="registerPassword"

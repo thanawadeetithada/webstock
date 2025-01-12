@@ -1,13 +1,26 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-$user_logged_in = isset($_SESSION['username']) ? $_SESSION['username'] : null;
+require 'config.php'; // เชื่อมต่อฐานข้อมูล
 
-if (isset($_POST['logout'])) {
-    session_destroy();
-    header("Location: index.php");
-    exit();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start(); // เริ่ม session หากยังไม่มี
+}
+
+// ตรวจสอบว่า username อยู่ใน session หรือไม่
+$username = $_SESSION['username'] ?? null;
+
+// ดึงค่า telegram_chat_id จากฐานข้อมูล
+$chat_id = null; // ค่าเริ่มต้น
+if ($username) {
+    $query = "SELECT telegram_chat_id FROM users WHERE username = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $chat_id = $row['telegram_chat_id'];
+    }
+    $stmt->close();
 }
 
 // ตรวจสอบหากคำขอเป็น AJAX ไม่ให้โหลด HTML
@@ -102,6 +115,38 @@ if (!(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WIT
         height: 92vh;
         margin-top: 8vh;
     }
+
+    .notification-btn {
+        position: relative;
+        background: transparent;
+        border: none;
+        color: white;
+        cursor: pointer;
+        padding: 0;
+        margin-right: 15px;
+        outline: none;
+    }
+
+    .notification-btn i {
+        font-size: 1.5rem;
+    }
+
+    .notification-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: red;
+        color: white;
+        font-size: 0.8rem;
+        padding: 2px 6px;
+        border-radius: 50%;
+        font-weight: bold;
+        line-height: 1;
+    }
+
+    .notification-btn:hover .notification-badge {
+        background-color: #ff6363;
+    }
     </style>
 </head>
 
@@ -113,6 +158,11 @@ if (!(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WIT
             </button>
         </div>
         <div class="right-section">
+            <button type="button" class="notification-btn" id="send-notification" 
+                data-chat-id="<?php echo htmlspecialchars($chat_id ?? ''); ?>">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">0</span>
+            </button>
             <button type="button">
                 <i class="fas fa-user mr-3"></i>
             </button>
@@ -144,6 +194,33 @@ if (!(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WIT
         } else {
             sidebar.style.left = "0";
         }
+    });
+
+    document.getElementById("send-notification").addEventListener("click", function () {
+        const BOT_TOKEN = "8059073921:AAHnfXZ_PqsGsgwtetimOkTuvH1KgbR-v9k";
+        const chat_id = this.dataset.chatId; // ดึง Chat ID จาก data attribute
+        const MESSAGE = "Hi! แจ้งเตือนจากระบบสำเร็จ";
+        console.log('chat ID:', chat_id);
+
+        if (!chat_id) {
+            alert("ไม่มี Chat ID สำหรับผู้ใช้นี้");
+            return;
+        }
+
+        // ส่งข้อความไปยัง Telegram API
+        const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(MESSAGE)}`;
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.ok) {
+                    alert("ส่งข้อความสำเร็จ!");
+                } else {
+                    alert("การส่งข้อความล้มเหลว: " + data.description);
+                }
+            })
+            .catch(error => {
+                console.error("Error sending notification:", error);
+            });
     });
     </script>
 </body>
