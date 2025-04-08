@@ -223,7 +223,8 @@ $sticker_styles = [
             </div>
         </div>
         <div class="center-button">
-            <button id="searchBtn" class="btn btn-primary">ค้นหา</button>
+            <button id="searchBtn" class="btn btn-primary mr-3">ค้นหา</button>
+            <button id="clearBtn" class="btn btn-danger" disabled>ล้างการค้นหา</button>
         </div>
         <table>
             <thead>
@@ -237,6 +238,7 @@ $sticker_styles = [
                     <th>วันหมดอายุ</th>
                     <th>สีสติ๊กเกอร์</th>
                     <th>หมวดหมู่สินค้า</th>
+                    <th>ตำแหน่งสินค้า</th>
                 </tr>
             </thead>
             <tbody id="product-table-body">
@@ -281,6 +283,8 @@ $sticker_styles = [
         } else {
             products.forEach(row => {
                 const stickerStyle = stickerStyles[row.sticker_color] || "";
+                const stickerText = row.sticker_color ? row.sticker_color : 'ไม่มีวันหมดอายุ';
+
                 const newRow = `
                 <tr>
                     <td>${row.product_code}</td>
@@ -290,8 +294,9 @@ $sticker_styles = [
                     <td>${row.unit_cost}</td>
                     <td>${row.received_date}</td>
                     <td>${row.expiration_date}</td>
-                    <td style="${stickerStyle}">${row.sticker_color}</td>
+                    <td style="${stickerStyle}">${stickerText}</td>
                     <td>${row.category}</td>
+                    <td>${row.position}</td>
                 </tr>`;
                 tableBody.insertAdjacentHTML("beforeend", newRow);
             });
@@ -329,6 +334,8 @@ $sticker_styles = [
                 } else {
                     data.forEach(row => {
                         const stickerStyle = stickerStyles[row.sticker_color] || "";
+                        const stickerText = row.sticker_color ? row.sticker_color : 'ไม่มีวันหมดอายุ';
+
                         const newRow = `
                             <tr>
                                 <td>${row.product_code}</td>
@@ -338,8 +345,9 @@ $sticker_styles = [
                                 <td>${row.unit_cost}</td>
                                 <td>${row.received_date}</td>
                                 <td>${row.expiration_date}</td>
-                                <td style="${stickerStyle}">${row.sticker_color}</td>
+                                <td style="${stickerStyle}">${stickerText}</td>
                                 <td>${row.category}</td>
+                                <td>${row.position}</td>
                             </tr>`;
                         tableBody.insertAdjacentHTML("beforeend", newRow);
                     });
@@ -357,13 +365,15 @@ $sticker_styles = [
         const searchBtn = document.getElementById("searchBtn");
 
         if (!startDate && !endDate) {
-            // If both dates are empty, show all products
             displayProducts(allProducts);
             searchBtn.disabled = true;
+            clearBtn.disabled = true;
         } else if (!startDate || !endDate || new Date(endDate) < new Date(startDate)) {
             searchBtn.disabled = true;
+            clearBtn.disabled = false;
         } else {
             searchBtn.disabled = false;
+            clearBtn.disabled = false;
         }
     }
 
@@ -380,6 +390,14 @@ $sticker_styles = [
         toggleSearchButton();
     });
     toggleSearchButton();
+
+    document.getElementById("clearBtn").addEventListener("click", function() {
+
+        document.getElementById("startDate").value = "";
+        document.getElementById("endDate").value = "";
+
+        toggleSearchButton();
+    });
     </script>
 
 </body>

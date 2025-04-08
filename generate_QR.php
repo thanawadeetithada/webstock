@@ -59,8 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $finalHeight = $newHeight + 40;
         $image = imagecreatetruecolor($newWidth, $finalHeight);
 
-        // สร้างสีพื้นหลังสีเขียวอ่อน
-        $backgroundColor = imagecolorallocate($image, 204, 255, 204);
+        $backgroundColor = imagecolorallocate($image, 255, 255, 255);  // สีขาว
         $textColor = imagecolorallocate($image, 0, 0, 0);
 
         // เติมสีพื้นหลัง
@@ -69,17 +68,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // วางภาพบาร์โค้ดที่ขยายขนาดลงบนภาพใหม่
         imagecopy($image, $resizedBarcodeImage, 0, 0, 0, 0, $newWidth, $newHeight);
 
-        // เพิ่มพื้นหลังใหม่ที่ใหญ่กว่า
+        // เพิ่มพื้นที่สำหรับกรอบ
         $outerWidth = $newWidth;
-        $outerHeight = $finalHeight + 70;
+        $outerHeight = $finalHeight + 40;
         $outerImage = imagecreatetruecolor($outerWidth, $outerHeight);
 
-        // สีพื้นหลังใหม่ (เช่น สีเทา)
-        $outerBackgroundColor = imagecolorallocate($outerImage, 255, 255, 255);
+        // สีพื้นหลังใหม่ (เช่น สีขาว)
+        $outerBackgroundColor = imagecolorallocate($outerImage, 255, 255, 255);  // สีขาว
         imagefilledrectangle($outerImage, 0, 0, $outerWidth, $outerHeight, $outerBackgroundColor);
 
-        // วางภาพ QR code พร้อมพื้นสีเขียวตรงกลาง
-        imagecopy($outerImage, $image, 0, 20, 0, 0, $newWidth, $finalHeight);
+        // วางภาพบาร์โค้ดและข้อความ
+        imagecopy($outerImage, $image, 0, 0, 0, 0, $newWidth, $finalHeight);
+
+        // กำหนดสีกรอบให้ชัดเจน (สีดำ)
+        $borderColor = imagecolorallocate($outerImage, 0, 0, 0);  // สีดำ
+        // กรอบรอบทั้งบาร์โค้ดและข้อความ
+        imagerectangle($outerImage, 0, 0, $newWidth - 1, $outerHeight - 1, $borderColor);  // กรอบรอบทั้งภาพและข้อความ
 
         // เพิ่มข้อความตัวเลขด้านล่างบาร์โค้ด
         $font = __DIR__ . '/font/THSarabunNew.ttf';

@@ -310,7 +310,11 @@ $sticker_styles = [
             products.sort((a, b) => new Date(a.stock_date) - new Date(b.stock_date));
 
             products.forEach((row, index) => {
-                const stickerStyle = stickerStyles[row.sticker_color] || "";
+                const stickerStyle = row.sticker_color ? stickerStyles[row.sticker_color] : stickerStyles[
+                    'ไม่มีวันหมดอายุ'];
+                const stickerText = row.sticker_color ||
+                'ไม่มีวันหมดอายุ';
+
                 let statusText = '-';
                 if (row.status === 'active') {
                     statusText = 'หมดอายุ';
@@ -326,8 +330,8 @@ $sticker_styles = [
                 <td>${row.product_name || '-'}</td>
                 <td>${row.quantity || '-'}</td>
                 <td>${row.unit || '-'}</td>
+                <td style="${stickerStyle}">${stickerText}</td>
                 <td>${row.unit_cost || '-'}</td>
-                <td style="${stickerStyle}">${row.sticker_color || '-'}</td>
                 <td>${row.stock_date || '-'}</td>
                 <td>${statusText}</td>
                 <td>${formatPosition(row.position) || '-'}</td>
