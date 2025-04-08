@@ -238,7 +238,8 @@ $sticker_styles = [
             </div>
         </div>
         <div class="center-button">
-            <button id="searchBtn" class="btn btn-primary">ค้นหา</button>
+            <button id="searchBtn" class="btn btn-primary mr-3">ค้นหา</button>
+            <button id="clearBtn" class="btn btn-danger" disabled>ล้างการค้นหา</button>
         </div>
         <table>
             <thead>
@@ -313,7 +314,7 @@ $sticker_styles = [
                 const stickerStyle = row.sticker_color ? stickerStyles[row.sticker_color] : stickerStyles[
                     'ไม่มีวันหมดอายุ'];
                 const stickerText = row.sticker_color ||
-                'ไม่มีวันหมดอายุ';
+                    'ไม่มีวันหมดอายุ';
 
                 let statusText = '-';
                 if (row.status === 'active') {
@@ -391,13 +392,16 @@ $sticker_styles = [
             displayProducts(allProducts);
             searchBtn.disabled = true;
             statusSelect.disabled = true;
+            clearBtn.disabled = true;
         } else if (!startDate || !endDate || new Date(endDate) < new Date(startDate)) {
             searchBtn.disabled = true;
             statusSelect.disabled = true;
             statusSelect
+            clearBtn.disabled = false;
         } else {
             searchBtn.disabled = false;
             statusSelect.disabled = false;
+            clearBtn.disabled = false;
         }
     }
 
@@ -414,6 +418,14 @@ $sticker_styles = [
         toggleSearchButton();
     });
     toggleSearchButton();
+
+    document.getElementById("clearBtn").addEventListener("click", function() {
+
+        document.getElementById("startDate").value = "";
+        document.getElementById("endDate").value = "";
+
+        toggleSearchButton();
+    });
     </script>
 
 </body>
