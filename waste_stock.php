@@ -59,7 +59,7 @@ if (isset($_POST['search'])) {
     }
 
     .container {
-        max-width: 80%;
+        max-width: fit-content;
         margin: auto;
         background: #fff;
         padding: 2.5rem;
@@ -83,6 +83,7 @@ if (isset($_POST['search'])) {
 
     table th,
     table td {
+        white-space: nowrap;
         text-align: center;
         padding: 10px;
         border: 1px solid #ddd;
