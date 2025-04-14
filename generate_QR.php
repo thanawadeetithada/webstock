@@ -4,7 +4,7 @@ use Picqer\Barcode\BarcodeGeneratorPNG;
 session_start();
 require 'vendor/autoload.php';
 include 'config.php';
-include('include/header.php');
+// include('include/header.php');
 
 $newProductCode = '';
 $barcodeFile = '';
@@ -106,6 +106,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             imagettftext($outerImage, $boldFontSize, 0, $currentX + 40, $outerHeight - 60, $textColor, $boldFont, $newProductCode[$i]);
             $currentX = round($spacePerChar * $i);
         }
+
+        // ข้อความแสดงตำแหน่งสินค้า
+        $positionText = "ตำแหน่งสินค้า: " . $position;
+
+        // คำนวณความกว้างของข้อความตำแหน่ง
+        $textBoxPosition = imagettfbbox($fontSize, 0, $font, $positionText);
+        $textWidthPosition = $textBoxPosition[2] - $textBoxPosition[0];
+
+        // คำนวณตำแหน่ง x ให้ข้อความตำแหน่งอยู่ชิดซ้าย (หรือจะให้ขวาก็ปรับเป็นเหมือนด้านล่าง)
+        $leftX = 10;
+
+        // แสดงข้อความตำแหน่งสินค้า ที่บรรทัดเหนือข้อความวันหมดอายุ
+        imagettftext($outerImage, $fontSize, 0, $leftX, $outerHeight - 10, $textColor, $font, $positionText);
+
 
         // ข้อความ "ควรบริโภคก่อนวันที่"
         $consumeBeforeText = "ควรบริโภคก่อนวันที่ : " . date('d/m/Y', strtotime($expiryDate));
