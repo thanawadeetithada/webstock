@@ -225,6 +225,9 @@ if (!isset($_SESSION['user_id'])) {
     .warning-row {
         width: 50%;
     }
+     .required {
+    color: red;
+  }
     </style>
 </head>
 
@@ -235,9 +238,6 @@ if (!isset($_SESSION['user_id'])) {
             <button id="delete-Button" class="delete-button">
                 <i class="fa-solid fa-trash"></i>ลบข้อมูล
             </button>
-            <!-- <button class="add-button">
-                <i class="fa-solid fa-circle-plus"></i>เพิ่ม
-            </button> -->
             <div class="import-button">
                 <input type="file" id="uploadExcel" accept=".xlsx, .xls" class="d-none">
                 <button id="uploadButton" class="btn btn-link">
@@ -251,105 +251,105 @@ if (!isset($_SESSION['user_id'])) {
         </div>
         <form class="form-container" id="productForm">
             <div class="form-row">
-                <label>รหัสสินค้า</label>
+                <label>รหัสสินค้า <span style="color: red;">*</span></label>
                 <input type="text" id="product_code" name="product_code" required>
             </div>
             <div class="form-row">
-                <label>ชื่อสินค้า</label>
+                <label>ชื่อสินค้า <span style="color: red;">*</span></label>
                 <input type="text" id="product_name" name="product_name" required>
             </div>
             <div class="form-row">
                 <label for="product_model">รุ่นการผลิต</label>
-                <input type="text" id="product_model" name="product_model" required>
+                <input type="text" id="product_model" name="product_model">
             </div>
             <div class="form-row">
                 <label for="production_date">วันผลิต</label>
-                <input type="date" id="production_date" name="production_date" required>
+                <input type="date" id="production_date" name="production_date">
             </div>
             <div class="form-row">
                 <label for="shelf_life">อายุสินค้า(วัน)</label>
-                <input type="number" id="shelf_life" name="shelf_life" required>
+                <input type="number" id="shelf_life" name="shelf_life">
             </div>
             <div class="form-row">
                 <label for="expiration_date">วันหมดอายุ</label>
-                <input type="date" id="expiration_date" name="expiration_date" required>
+                <input type="date" id="expiration_date" name="expiration_date">
             </div>
             <div class="form-row">
                 <label for="sticker_color">สีสติ๊กเกอร์</label>
-                <select id="sticker_color" name="sticker_color" required>
-                    <option value="" disabled selected>เลือกสีสติ๊กเกอร์</option>
-                    <option value="หมดอายุเดือน 1" style="background-color: #E3D200; color: #000;">หมดอายุเดือน 1
+                <select id="sticker_color" name="sticker_color">
+                    <option value="" disabled selected >เลือกสีสติ๊กเกอร์</option>
+                    <option value="หมดอายุเดือน 1" style="background-color: #FD3535; color: #000;">หมดอายุเดือน 1
                     </option>
-                    <option value="หมดอายุเดือน 2" style="background-color: #00C4B4; color: #fff;">หมดอายุเดือน 2
+                    <option value="หมดอายุเดือน 2" style="background-color: #FFFF8A; color: #000;">หมดอายุเดือน 2
                     </option>
-                    <option value="หมดอายุเดือน 3" style="background-color: #EE700E; color: #fff;">หมดอายุเดือน 3
+                    <option value="หมดอายุเดือน 3" style="background-color: #99EBFF; color: #000;">หมดอายุเดือน 3
                     </option>
-                    <option value="หมดอายุเดือน 4" style="background-color: #EA12B1; color: #fff;">หมดอายุเดือน 4
+                    <option value="หมดอายุเดือน 4" style="background-color: #05A854; color: #000;">หมดอายุเดือน 4
                     </option>
-                    <option value="หมดอายุเดือน 5" style="background-color: #C8E9F0; color: #000;">หมดอายุเดือน 5
+                    <option value="หมดอายุเดือน 5" style="background-color: #FD8849; color: #000;">หมดอายุเดือน 5
                     </option>
-                    <option value="หมดอายุเดือน 6" style="background-color: #02A737; color: #fff;">หมดอายุเดือน 6
+                    <option value="หมดอายุเดือน 6" style="background-color: #FE3998; color: #000;">หมดอายุเดือน 6
                     </option>
-                    <option value="หมดอายุเดือน 7" style="background-color: #EAEAA2; color: #000;">หมดอายุเดือน 7
+                    <option value="หมดอายุเดือน 7" style="background-color: #0BE0D2; color: #000;">หมดอายุเดือน 7
                     </option>
-                    <option value="หมดอายุเดือน 8" style="background-color: #00A1CD; color: #fff;">หมดอายุเดือน 8
+                    <option value="หมดอายุเดือน 8" style="background-color: #E6B751; color: #000;">หมดอายุเดือน 8
                     </option>
-                    <option value="หมดอายุเดือน 9" style="background-color: #AA7964; color: #fff;">หมดอายุเดือน 9
+                    <option value="หมดอายุเดือน 9" style="background-color: #FDC4EB; color: #000;">หมดอายุเดือน 9
                     </option>
-                    <option value="หมดอายุเดือน 10" style="background-color: #F4D3DC; color: #000;">หมดอายุเดือน 10
+                    <option value="หมดอายุเดือน 10" style="background-color: #B9F4A2; color: #000;">หมดอายุเดือน 10
                     </option>
-                    <option value="หมดอายุเดือน 11" style="background-color: #B9F4A2; color: #000;">หมดอายุเดือน 11
+                    <option value="หมดอายุเดือน 11" style="background-color: #CC99FF; color: #000;">หมดอายุเดือน 11
                     </option>
                     <option value="หมดอายุเดือน 12"
-                        style="background-color: #FFFFFF; color: #000; border: 1px solid #ccc;">หมดอายุเดือน 12
+                        style="background-color: #999999; color: #000; border: 1px solid #000;">หมดอายุเดือน 12
                     </option>
-                    <option value="ไม่มีวันหมดอายุ" style="background-color: #999999; color: #fff;">ไม่มีวันหมดอายุ
+                    <option value="ไม่มีวันหมดอายุ" style="background-color: #FFFFFF; color: #000;">ไม่มีวันหมดอายุ
                     </option>
                 </select>
             </div>
             <div class="form-row">
                 <label for="reminder_date">เตือนล่วงหน้า</label>
-                <input type="date" id="reminder_date" name="reminder_date" required disabled>
+                <input type="date" id="reminder_date" name="reminder_date">
             </div>
             <div class="form-row">
-                <label for="received_date">วันรับเข้า</label>
+                <label for="received_date">วันรับเข้า <span style="color: red;">*</span></label>
                 <input type="date" id="received_date" name="received_date" required>
             </div>
             <div class="form-row">
-                <label for="quantity">จำนวน</label>
+                <label for="quantity">จำนวน <span style="color: red;">*</span></label>
                 <input type="number" id="quantity" name="quantity" required>
             </div>
             <div class="form-row">
-                <label for="unit">หน่วย</label>
+                <label for="unit">หน่วย <span style="color: red;">*</span></label>
                 <input type="text" id="unit" name="unit" required>
             </div>
             <div class="form-row">
                 <label for="unit_cost">ราคาทุนต่อหน่วย</label>
-                <input type="number" id="unit_cost" name="unit_cost" required>
+                <input type="number" id="unit_cost" name="unit_cost">
             </div>
             <div class="form-row">
                 <label for="sender_code">รหัสผู้ส่ง</label>
-                <input type="text" id="sender_code" name="sender_code" required>
+                <input type="text" id="sender_code" name="sender_code">
             </div>
             <div class="form-row">
                 <label for="sender_company">ชื่อบริษัทผู้ส่ง</label>
-                <input type="text" id="sender_company" name="sender_company" required>
+                <input type="text" id="sender_company" name="sender_company">
             </div>
             <div class="form-row">
                 <label for="recorder">ผู้บันทึกข้อมูล</label>
-                <input type="text" id="recorder" name="recorder" required>
+                <input type="text" id="recorder" name="recorder">
             </div>
             <div class="form-row">
                 <label for="unit_price">ราคาขายต่อหน่วย(บาท)</label>
-                <input type="number" id="unit_price" name="unit_price" required>
+                <input type="number" id="unit_price" name="unit_price">
             </div>
             <div class="form-row">
                 <label for="category">หมวดหมู่สินค้า</label>
-                <input type="text" id="category" name="category" required>
+                <input type="text" id="category" name="category">
             </div>
             <div class="form-row">
                 <label for="position">ตำแหน่งสินค้า</label>
-                <input type="text" id="position" name="position" required>
+                <input type="text" id="position" name="position">
             </div>
             <div class="submit-button">
                 <button type="button" class="btn btn-primary" id="confirmButton">บันทึกข้อมูล</button>
@@ -714,10 +714,12 @@ if (!isset($_SESSION['user_id'])) {
             event.preventDefault();
 
             const formElements = document.querySelectorAll(
-                "#productForm .form-row input, #productForm .form-row select");
+                "#productForm .form-row input, #productForm .form-row select"
+            );
 
             formElements.forEach((element) => {
                 const parent = element.parentElement;
+                 let value = element.value.trim();
                 if (element.disabled) {
                     const span = document.createElement("span");
                     span.textContent = element.value;
@@ -735,14 +737,17 @@ if (!isset($_SESSION['user_id'])) {
                     const span = document.createElement("span");
                     span.textContent = element.value;
                     span.style.display = "block";
-                    span.style.padding = "10px";
                     span.style.marginBottom = "10px";
                     span.style.border = "1px solid #ccc";
                     span.style.borderRadius = "5px";
                     span.style.backgroundColor = "#EFEFEF4D";
                     span.style.cursor = 'default';
                     span.style.width = '90%';
-
+                    if (value === "") {
+                        span.style.padding = "20px";
+                    } else {
+                        span.style.padding = "10px";
+                    }
                     element.style.display = "none";
                     parent.appendChild(span);
                 }
@@ -787,7 +792,7 @@ if (!isset($_SESSION['user_id'])) {
         const editButton = document.getElementById("editButton");
         const cancelButton = document.getElementById("cancelButton");
         const formElements = document.querySelectorAll(
-            "#productForm .form-row input, #productForm .form-row select");
+            "#productForm .form-row input[required], #productForm .form-row select[required]");
 
         confirmButton.disabled = true;
         resetButton.disabled = true;

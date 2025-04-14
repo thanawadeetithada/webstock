@@ -101,10 +101,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        $invoice_number = 'INV-' . time();
+        $payment_status = 'PAID';
+        $customer_name = $_POST['customer_name'] ?? ''; 
+        $customer_contact = $_POST['customer_contact'] ?? ''; 
+
+        $sql_invoice = "INSERT INTO invoice (sell_id, invoice_number, total_price, issue_date, payment_status, customer_name, customer_contact)
+                        VALUES (?, ?, ?, NOW(), ?, ?, ?)";
+        $stmt_invoice = $conn->prepare($sql_invoice);
+        $stmt_invoice->bind_param("isdsss", $sell_id, $invoice_number, $total_price, $payment_status, $customer_name, $customer_contact);
+
+        if (!$stmt_invoice->execute()) {
+            throw new Exception("เกิดข้อผิดพลาดในการบันทึก invoice: " . $stmt_invoice->error);
+        }
+
+        $invoice_id = $stmt_invoice->insert_id;
+
         $conn->commit();
-        echo "บันทึกข้อมูลสำเร็จ";
+
         $_SESSION['payment_end_time'] = time() + (15 * 60);
-        header("Location: sell_products.php"); // เปลี่ยนเส้นทางไปยังหน้า success
+
+        header("Location: receipt_sell.php?invoice_id=" . $invoice_id);
         exit;
 
     } catch (Exception $e) {

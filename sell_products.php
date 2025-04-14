@@ -10,6 +10,8 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+date_default_timezone_set('Asia/Bangkok');
+
 $username = isset($_SESSION['username']) ? $_SESSION['username'] : 'ผู้ใช้';
 $total_items = 0;
 $total_quantity = 0;
@@ -76,23 +78,6 @@ if (isset($_POST['search'])) {
         width: 100%;
     }
 
-    .search-container input {
-        padding: 8px 30px 8px 10px;
-        width: 35%;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        outline: none;
-    }
-
-    .search-container i {
-        position: absolute;
-        left: 37%;
-        transform: translateY(-160%);
-        font-size: 18px;
-        color: #aaa;
-        top: 20vh;
-        padding-bottom: 2px;
-    }
 
     table {
         width: 100%;
@@ -167,17 +152,40 @@ if (isset($_POST['search'])) {
         display: none;
         margin-top: 16px;
     }
+
+    .search-btn {
+        position: relative;
+        width: 40%;
+    }
+
+    .search-btn input {
+        width: 100%;
+        padding: 10px 35px 10px 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        outline: none;
+    }
+
+    .search-btn i {
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        transform: translateY(-50%);
+        color: gray;
+    }
     </style>
 </head>
 
 <body>
     <div class="container">
         <div class="search-container">
-            <input type="text" id="search-box" placeholder="ค้นหารหัสสินค้า...">
-            <i class="fa-solid fa-magnifying-glass"></i>
+            <div class="search-btn">
+                <input type="text" id="search-box" placeholder="ค้นหารหัสสินค้า...">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
             <div class="search-info">
                 <span class="label">วันที่</span> <?=$current_date?>
-                <span class="label">เวลา</span> <?=$current_time?>
+                <span class="label">เวลา</span> <span id="current-time"></span>
                 <span class="label">ผู้ทำการขาย</span> <?=$username?>
             </div>
         </div>
@@ -228,6 +236,51 @@ if (isset($_POST['search'])) {
         </div>
     </div>
     <script>
+    document.querySelector('.fa-magnifying-glass').addEventListener('click', function() {
+        const searchValue = document.getElementById('search-box').value.trim();
+
+        if (searchValue) {
+            fetch('', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'search=' + encodeURIComponent(searchValue)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const product = data.product;
+
+                        // ตรวจสอบว่ามีสินค้านี้อยู่แล้วในตารางหรือไม่
+                        const tbody = document.querySelector('table tbody');
+                        const existingCodes = Array.from(tbody.querySelectorAll(
+                                'input[name="product_code"]'))
+                            .map(input => input.value);
+
+                        if (existingCodes.includes(product.product_code)) {
+                            alert('มีข้อมูลสินค้านี้อยู่แล้ว');
+                        } else {
+                            let maxQuantity = parseInt(product.quantity);
+                            showCustomPrompt(`กรุณาใส่จำนวนสินค้า (มี ${maxQuantity} ชิ้นในสต็อก)`,
+                                maxQuantity,
+                                function(quantityValue) {
+                                    if (quantityValue !== null) {
+                                        product.quantity = quantityValue;
+                                        addProductToTable(product);
+                                        allProducts.push(product);
+                                    }
+                                });
+                        }
+                    } else {
+                        alert(data.message);
+                    }
+                    document.getElementById('search-box').value = '';
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    });
+
     document.getElementById('select-all').addEventListener('change', function() {
         const checkboxes = document.querySelectorAll('table tbody input[type="checkbox"]');
         checkboxes.forEach(checkbox => {
@@ -443,6 +496,21 @@ if (isset($_POST['search'])) {
             document.getElementById('custom-prompt-ok').click();
         }
     });
+
+    function updateTime() {
+        const now = new Date(); // ดึงเวลาปัจจุบันจากเครื่องผู้ใช้
+        const hours = now.getHours().toString().padStart(2, '0'); // ชั่วโมง (00-23)
+        const minutes = now.getMinutes().toString().padStart(2, '0'); // นาที (00-59)
+        const seconds = now.getSeconds().toString().padStart(2, '0'); // วินาที (00-59)
+
+        document.getElementById('current-time').innerHTML = `${hours}:${minutes}:${seconds}`; // แสดงเวลาใน HTML
+    }
+
+    // อัปเดตเวลาเมื่อหน้าโหลด
+    updateTime();
+
+    // ตั้ง interval ให้ทำงานทุก 1 วินาที
+    setInterval(updateTime, 1000);
     </script>
 </body>
 

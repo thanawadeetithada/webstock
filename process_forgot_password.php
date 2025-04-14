@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email'])) {
             exit;
         }
 
-        $resetLink = "http://localhost/webstock/reset_password.php?token=$token";
+        $resetLink = "https://web-stock.ct.ws/reset_password.php?token=$token";
         $mail = new PHPMailer(true);
         try {
             $mail->isSMTP();

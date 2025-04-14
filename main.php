@@ -25,7 +25,7 @@ if (!isset($_SESSION['user_id'])) {
 
 body {
     font-family: 'Arial', sans-serif;
-    background-color: #9B9AFF;
+    background-color: white;
     color: #333;
 }
 
@@ -50,7 +50,7 @@ main {
     margin: 0 auto;
 }
 
-.btn {
+.button-container .btn {
     padding: 15px 30px;
     font-size: 1.2rem;
     background-color: #33FFFF;
@@ -62,7 +62,7 @@ main {
     border: 1px solid #070707;
 }
 
-.btn:hover {
+.button-container .btn:hover {
     transform: scale(1.05);
     box-shadow: none;
 }

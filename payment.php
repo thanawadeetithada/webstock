@@ -25,7 +25,7 @@ if ($remaining_time <= 0) {
     exit;
 }
 
-$qr_code_image = '/webstock/img/QR.jpg';
+$qr_code_image = '/img/QR.jpg';
 ?>
 
 <!DOCTYPE html>
@@ -136,6 +136,7 @@ $qr_code_image = '/webstock/img/QR.jpg';
             <button type="button" class="btn btn-danger" onclick="resetCountdownAndRedirect()">ยกเลิก</button>
         </form>
     </div>
+
 </body>
 
 </html>

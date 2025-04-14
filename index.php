@@ -1,5 +1,5 @@
 <?php
-require 'vendor/autoload.php';
+
 session_start();
 include('config.php'); 
 require 'vendor/autoload.php';
@@ -100,21 +100,22 @@ if (isset($_POST['register'])) {
                 $mail = new PHPMailer(true);
                 try {
                     // ตั้งค่าเซิร์ฟเวอร์อีเมล
-                    $mail->isSMTP();
-                    $mail->Host = 'smtp.gmail.com';
-                    $mail->SMTPAuth = true;
-                    $mail->Username = 'mitinventor015@gmail.com'; // อีเมล Gmail ของคุณ
-                    $mail->Password = 'ukebjwmfzmwuipjw'; // ใช้ App Password แทน
-                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                    $mail->Port = 587;
+                     $mail->isSMTP();
+                     $mail->Host = 'smtp.gmail.com'; // ใช้ Gmail SMTP
+                     $mail->SMTPAuth = true;
+                     $mail->Username = 'mitinventor015@gmail.com'; // 🔹 เปลี่ยนเป็นอีเมลของคุณ
+                     $mail->Password = 'etptordrjdzhhsas'; // 🔹 ใช้ App Password แทนรหัสผ่านจริง
+                     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                     $mail->Port = 587;
 
                     // ตั้งค่าอีเมลผู้ส่งและผู้รับ
-                    $mail->setFrom('mitinventor015@gmail.com', 'WEB STOCK');
-                    $mail->addAddress($email); // อีเมลผู้รับจากฟอร์ม
+                    $mail->setFrom('mitinventor015@gmail.com', 'WEB STOCK'); 
+                    $mail->addAddress($email);
                     $mail->CharSet = 'UTF-8';
             
                     // เนื้อหาอีเมล
                     $mail->isHTML(true);
+                    $mail->CharSet = "UTF-8";
                     $mail->Subject = 'ยินดีต้อนรับสู่ระบบ!';
                     $mail->Body = "
                         <h1>สวัสดีคุณ $username!</h1>

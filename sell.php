@@ -7,6 +7,8 @@ if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
     exit;
 }
+date_default_timezone_set('Asia/Bangkok');
+
 
 $sql = "SELECT product_code, product_name, quantity, unit, unit_cost FROM products";
 $result = $conn->query($sql);
@@ -146,7 +148,7 @@ $result = $conn->query($sql);
             </button>
             <div class="search-info">
                 <span class="label">วันที่</span> <?= $current_date ?>
-                <span class="label">เวลา</span> <?= $current_time ?>
+                <span class="label">เวลา</span> <span id="current-time"></span>
                 <span class="label">ผู้ทำการขาย</span> <?= $username ?>
             </div>
         </div>
@@ -310,6 +312,21 @@ $result = $conn->query($sql);
     window.onload = function() {
         calculateTotals();
     };
+
+    function updateTime() {
+        const now = new Date(); // ดึงเวลาปัจจุบันจากเครื่องผู้ใช้
+        const hours = now.getHours().toString().padStart(2, '0'); // ชั่วโมง (00-23)
+        const minutes = now.getMinutes().toString().padStart(2, '0'); // นาที (00-59)
+        const seconds = now.getSeconds().toString().padStart(2, '0'); // วินาที (00-59)
+
+        document.getElementById('current-time').innerHTML = `${hours}:${minutes}:${seconds}`; // แสดงเวลาใน HTML
+    }
+
+    // อัปเดตเวลาเมื่อหน้าโหลด
+    updateTime();
+
+    // ตั้ง interval ให้ทำงานทุก 1 วินาที
+    setInterval(updateTime, 1000);
     </script>
 
 </body>

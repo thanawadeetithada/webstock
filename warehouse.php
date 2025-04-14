@@ -27,18 +27,20 @@ $sql = "SELECT product_code, product_name, quantity, unit, unit_cost, expiration
 $result = $conn->query($sql);
 
 $sticker_styles = [
-    'หมดอายุเดือน 1' => 'background-color: #E3D200; color: #000;',
-    'หมดอายุเดือน 2' => 'background-color: #00C4B4; color: #fff;',
-    'หมดอายุเดือน 3' => 'background-color: #EE700E; color: #fff;',
-    'หมดอายุเดือน 4' => 'background-color: #EA12B1; color: #fff;',
-    'หมดอายุเดือน 5' => 'background-color: #C8E9F0; color: #000;',
-    'หมดอายุเดือน 6' => 'background-color: #02A737; color: #fff;',
-    'หมดอายุเดือน 7' => 'background-color: #EAEAA2; color: #000;',
-    'หมดอายุเดือน 8' => 'background-color: #00A1CD; color: #fff;',
-    'หมดอายุเดือน 9' => 'background-color: #AA7964; color: #fff;',
-    'หมดอายุเดือน 10' => 'background-color: #F4D3DC; color: #000;',
-    'หมดอายุเดือน 11' => 'background-color: #B9F4A2; color: #000;',
-    'หมดอายุเดือน 12' => 'background-color: #FFFFFF; color: #000; border: 1px solid #ccc;',
+    'หมดอายุเดือน 1' => 'background-color: #FD3535; color: #000;',
+    'หมดอายุเดือน 2' => 'background-color: #FFFF8A; color: #000;',
+    'หมดอายุเดือน 3' => 'background-color: #99EBFF; color: #000;',
+    'หมดอายุเดือน 4' => 'background-color: #05A854; color: #000;',
+    'หมดอายุเดือน 5' => 'background-color: #FD8849; color: #000;',
+    'หมดอายุเดือน 6' => 'background-color: #FE3998; color: #000;',
+    'หมดอายุเดือน 7' => 'background-color: #0BE0D2; color: #000;',
+    'หมดอายุเดือน 8' => 'background-color: #E6B751; color: #000;',
+    'หมดอายุเดือน 9' => 'background-color: #FDC4EB; color: #000;',
+    'หมดอายุเดือน 10' => 'background-color: #B9F4A2; color: #000;',
+    'หมดอายุเดือน 11' => 'background-color: #CC99FF; color: #000;',
+    'หมดอายุเดือน 12' => 'background-color: #999999; color: #000; border: 1px solid #ccc;',
+    'ไม่มีวันหมดอายุ' => 'background-color: #FFFFFF; color: #000;',
+    'ไม่ระบุข้อมูล'=> 'background-color: #999999; color: #fff;', 
 ];
 ?>
 
@@ -74,24 +76,6 @@ $sticker_styles = [
         align-items: flex-end;
         margin-bottom: 30px;
         width: 100%;
-    }
-
-    .search-container input {
-        padding: 8px 30px 8px 10px;
-        width: 35%;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        outline: none;
-    }
-
-    .search-container i {
-        position: absolute;
-        left: 37%;
-        transform: translateY(-160%);
-        font-size: 18px;
-        color: #aaa;
-        top: 23vh;
-        padding-bottom: 2px;
     }
 
     .right-section {
@@ -147,14 +131,37 @@ $sticker_styles = [
     ::-webkit-scrollbar {
         display: none;
     }
+
+    .search-btn {
+        position: relative;
+        width: 40%;
+    }
+
+    .search-btn input {
+        width: 100%;
+        padding: 10px 35px 10px 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        outline: none;
+    }
+
+    .search-btn i {
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        transform: translateY(-50%);
+        color: gray;
+    }
     </style>
 </head>
 
 <body>
     <div class="container">
         <div class="search-container">
-            <input type="text" id="search-box" placeholder="ค้นหาชื่อสินค้า/รหัสสินค้า...">
-            <i class="fa-solid fa-magnifying-glass"></i>
+            <div class="search-btn">
+                <input type="text" id="search-box" placeholder="ค้นหาชื่อสินค้า/รหัสสินค้า...">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
             <div class="right-section">
                 <div class="dropdown-container">
                     <label for="productCategory">หมวดหมู่สินค้า</label>
@@ -212,7 +219,13 @@ $sticker_styles = [
                 if ($result->num_rows > 0) {
                     while($row = $result->fetch_assoc()) {
                         $sticker_color = $row['sticker_color'];
-                        $sticker_style = isset($sticker_styles[$sticker_color]) ? $sticker_styles[$sticker_color] : 'background-color: #999999; color: #fff;';
+                        if (empty($sticker_color)) {
+                $sticker_color = "ไม่ระบุข้อมูล";
+                $sticker_style = "background-color: #999999; color: #fff;";
+            } else {
+                $sticker_style = isset($sticker_styles[$sticker_color]) ? $sticker_styles[$sticker_color] : "background-color: #999999; color: #fff;";
+            }
+
                 
                         echo "<tr data-product-code='" . $row['product_code'] . "'>";
                         echo "<td>" . $no++ . "</td>";
@@ -220,7 +233,7 @@ $sticker_styles = [
                         echo "<td>" . $row['product_name'] . "</td>";
                         echo "<td>" . $row['quantity'] . "</td>";
                         echo "<td>" . $row['unit'] . "</td>";
-                        echo "<td><button style='width: 100%; $sticker_style' disabled>" . $sticker_color . "</button></td>";
+                        echo "<td style='$sticker_style' disabled>" . (empty($row['sticker_color']) ? 'ไม่ระบุข้อมูล' : $row['sticker_color']) . "</td>";
                         echo "<td>" . $row['expiration_date'] . "</td>";
                         echo "<td>" . $row['category'] . "</td>";
                         echo "</tr>";
@@ -264,7 +277,7 @@ $sticker_styles = [
             const matchesSearch = searchQuery === "" ||
                 (productNameCell && productNameCell.textContent.trim().toLowerCase().includes(searchQuery)) ||
                 (productCodeCell && productCodeCell.textContent.trim().toLowerCase().includes(
-                searchQuery));
+                    searchQuery));
 
             return matchesCategory && matchesUnit && matchesSearch;
         });

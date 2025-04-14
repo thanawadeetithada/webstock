@@ -241,14 +241,19 @@ echo json_encode([
                 <div class="dropdown-container">
                     <label for="yearDropdown">ของเสียในแต่ละปี</label>
                     <form>
-                        <select name="year" id="yearDropdown">
-                            <option value="">ทั้งหมด</option>
-                            <?php
-foreach ($years as $year) {
-    echo "<option value=\"$year\">$year</option>";
-}
-?>
-                        </select>
+                      <select name="year" id="yearDropdown">
+    <option value="">ทั้งหมด</option>
+    <?php
+    $current_year = date("Y");
+    $start_year = $current_year - 5;
+    $end_year = $current_year + 5;
+
+    for ($year = $start_year; $year <= $end_year; $year++) {
+        echo "<option value=\"$year\">$year</option>";
+    }
+    ?>
+</select>
+
                     </form>
                 </div>
 
@@ -284,7 +289,10 @@ foreach ($month_names as $month_number => $month_name) {
 
             </div>
         </div>
-        <h3 class="text-center">จำนวนของเสีย</h3>
+
+        <h3 class="text-center">เปรียบเทียบของเสียประจำสัปดาห์</h3>
+        <canvas id="lineChart" width="350" height="100"></canvas>
+<br>
         <div class="legend-container">
             <div class="legend-item">
                 <span class="legend-color" style="background-color: #007FFF;"></span>
@@ -313,9 +321,43 @@ foreach ($month_names as $month_number => $month_name) {
     'expiration_totals' => array_values($expiration_data),
 ]); ?>;
 
-    const categories = data.categories;
+  const categories = data.categories;
     const sellTotals = data.sell_totals;
     const expirationTotals = data.expiration_totals;
+
+const totalExpiredData = <?php echo $total_expired; ?>;
+
+const lineCtx = document.getElementById('lineChart').getContext('2d');
+const lineChart = new Chart(lineCtx, {
+    type: 'line',
+    data: {
+        labels: categories,
+        datasets: [{
+            label: '',
+            data: [totalExpiredData * 0.8, totalExpiredData * 0.9, totalExpiredData * 0.85, totalExpiredData * 0.95, totalExpiredData, totalExpiredData * 1.1], // จำลองข้อมูลแนวโน้ม
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.3
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        },
+        plugins: {
+            legend: {
+                display: false,
+            }
+        }
+    }
+});
+
+  
 
     // กำหนดสีให้แต่ละหมวดหมู่
     const categoryColors = {
@@ -334,25 +376,25 @@ foreach ($month_names as $month_number => $month_name) {
         data: {
             labels: categories,
             datasets: [{
-                    label: 'จำนวนขาย',
+                    label: '',
                     data: sellTotals,
                     backgroundColor: backgroundColors,
                     borderColor: backgroundColors,
                     borderWidth: 1
                 },
                 {
-                    label: 'จำนวนหมดอายุ',
+                    label: '',
                     data: expirationTotals,
-                    backgroundColor: backgroundColors,
+                    backgroundColor: backgroundColors.map(color => color + '80'), 
                     borderColor: backgroundColors,
                     borderWidth: 1
                 }
             ],
         },
         options: {
-            indexAxis: 'y',
+            indexAxis: 'x',
             scales: {
-                x: {
+                y: {
                     beginAtZero: true,
                     title: {
                         display: true,
@@ -362,8 +404,7 @@ foreach ($month_names as $month_number => $month_name) {
             },
             plugins: {
                 legend: {
-                    display: true,
-                    position: 'top'
+                    display: false,
                 }
             }
         }

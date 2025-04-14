@@ -76,24 +76,6 @@ if (isset($_POST['search'])) {
         width: 100%;
     }
 
-    .search-container input {
-        padding: 8px 30px 8px 10px;
-        width: 35%;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        outline: none;
-    }
-
-    .search-container i {
-        position: absolute;
-        left: 37%;
-        transform: translateY(-160%);
-        font-size: 18px;
-        color: #aaa;
-        top: 20vh;
-        padding-bottom: 2px;
-    }
-
     table {
         width: 100%;
         border-collapse: collapse;
@@ -167,14 +149,37 @@ if (isset($_POST['search'])) {
         display: none;
         margin-top: 16px;
     }
+
+    .search-btn {
+        position: relative;
+        width: 40%;
+    }
+
+    .search-btn input {
+        width: 100%;
+        padding: 10px 35px 10px 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        outline: none;
+    }
+
+    .search-btn i {
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        transform: translateY(-50%);
+        color: gray;
+    }
     </style>
 </head>
 
 <body>
     <div class="container">
         <div class="search-container">
-            <input type="text" id="search-box" placeholder="ค้นหารหัสสินค้า...">
-            <i class="fa-solid fa-magnifying-glass"></i>
+            <div class="search-btn">
+                <input type="text" id="search-box" placeholder="ค้นหารหัสสินค้า...">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
             <div class="search-info">
                 <span class="label">วันที่</span> <?=$current_date?>
                 <span class="label">เวลา</span> <?=$current_time?>
@@ -305,10 +310,32 @@ if (isset($_POST['search'])) {
     }
 
     function formatPosition(position) {
-        if (!position || position.length < 3) return position;
-        const row = position[0];
-        const floor = position[1];
-        const slot = position[2];
+        if (!position || position.length === 0) return "ตำแหน่งไม่ระบุ";
+
+        let row = "-";
+        let floor = "-";
+        let slot = "-";
+
+        if (position.length === 3) {
+            row = position[0];
+            floor = position[1];
+            slot = position[2];
+        } else if (position.length === 2) {
+            if (!isNaN(position[0]) && !isNaN(position[1])) {
+                floor = position[0];
+                slot = position[1];
+            } else {
+                row = position[0];
+                floor = position[1];
+            }
+        } else if (position.length === 1) {
+            if (!isNaN(position[0])) {
+                floor = position[0];
+            } else {
+                row = position[0];
+            }
+        }
+
         return `แถว ${row} ชั้น ${floor} ช่อง ${slot}`;
     }
 
@@ -445,6 +472,51 @@ if (isset($_POST['search'])) {
                     })
                     .catch(error => console.error('Error:', error));
             }
+        }
+    });
+
+    document.querySelector('.fa-magnifying-glass').addEventListener('click', function() {
+        const searchValue = document.getElementById('search-box').value.trim();
+
+        if (searchValue) {
+            fetch('', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'search=' + encodeURIComponent(searchValue)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const product = data.product;
+
+                        // ตรวจสอบว่ามีสินค้านี้อยู่แล้วในตารางหรือไม่
+                        const tbody = document.querySelector('table tbody');
+                        const existingCodes = Array.from(tbody.querySelectorAll(
+                                'input[name="product_code"]'))
+                            .map(input => input.value);
+
+                        if (existingCodes.includes(product.product_code)) {
+                            alert('มีข้อมูลสินค้านี้อยู่แล้ว');
+                        } else {
+                            let maxQuantity = parseInt(product.quantity);
+                            showCustomPrompt(`กรุณาใส่จำนวนสินค้า (มี ${maxQuantity} ชิ้นในสต็อก)`,
+                                maxQuantity,
+                                function(quantityValue) {
+                                    if (quantityValue !== null) {
+                                        product.quantity = quantityValue;
+                                        addProductToTable(product);
+                                        allProducts.push(product);
+                                    }
+                                });
+                        }
+                    } else {
+                        alert(data.message);
+                    }
+                    document.getElementById('search-box').value = '';
+                })
+                .catch(error => console.error('Error:', error));
         }
     });
 
