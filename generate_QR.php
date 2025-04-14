@@ -4,7 +4,7 @@ use Picqer\Barcode\BarcodeGeneratorPNG;
 session_start();
 require 'vendor/autoload.php';
 include 'config.php';
-// include('include/header.php');
+include('include/header.php');
 
 $newProductCode = '';
 $barcodeFile = '';
