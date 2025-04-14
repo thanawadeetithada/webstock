@@ -19,19 +19,19 @@ if ($result) {
 }
 
 $sticker_styles = [
-    'หมดอายุเดือน 1' => 'background-color: #E3D200; color: #000;',
-    'หมดอายุเดือน 2' => 'background-color: #00C4B4; color: #fff;',
-    'หมดอายุเดือน 3' => 'background-color: #EE700E; color: #fff;',
-    'หมดอายุเดือน 4' => 'background-color: #EA12B1; color: #fff;',
-    'หมดอายุเดือน 5' => 'background-color: #C8E9F0; color: #000;',
-    'หมดอายุเดือน 6' => 'background-color: #02A737; color: #fff;',
-    'หมดอายุเดือน 7' => 'background-color: #EAEAA2; color: #000;',
-    'หมดอายุเดือน 8' => 'background-color: #00A1CD; color: #fff;',
-    'หมดอายุเดือน 9' => 'background-color: #AA7964; color: #fff;',
-    'หมดอายุเดือน 10' => 'background-color: #F4D3DC; color: #000;',
-    'หมดอายุเดือน 11' => 'background-color: #B9F4A2; color: #000;',
-    'หมดอายุเดือน 12' => 'background-color: #FFFFFF; color: #000; border: 1px solid #ccc;',
-    'ไม่มีวันหมดอายุ' => 'background-color: #999999; color: #fff;',
+    'หมดอายุเดือน 1' => 'background-color: #FD3535; color: #000;',
+    'หมดอายุเดือน 2' => 'background-color: #FFFF8A; color: #000;',
+    'หมดอายุเดือน 3' => 'background-color: #99EBFF; color: #000;',
+    'หมดอายุเดือน 4' => 'background-color: #05A854; color: #000;',
+    'หมดอายุเดือน 5' => 'background-color: #FD8849; color: #000;',
+    'หมดอายุเดือน 6' => 'background-color: #FE3998; color: #000;',
+    'หมดอายุเดือน 7' => 'background-color: #0BE0D2; color: #000;',
+    'หมดอายุเดือน 8' => 'background-color: #E6B751; color: #000;',
+    'หมดอายุเดือน 9' => 'background-color: #FDC4EB; color: #000;',
+    'หมดอายุเดือน 10' => 'background-color: #B9F4A2; color: #000;',
+    'หมดอายุเดือน 11' => 'background-color: #CC99FF; color: #000;',
+    'หมดอายุเดือน 12' => 'background-color: #999999; color: #000;',
+    'ไม่มีวันหมดอายุ' => 'background-color: #FFFFFF; color: #000;',
 ];
 ?>
 
@@ -171,12 +171,13 @@ $sticker_styles = [
     }
 
     .print-buttons {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         position: absolute;
         top: 20px;
+        left: 20px;
         right: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
     }
 
     .print-buttons button,
@@ -204,9 +205,16 @@ $sticker_styles = [
 <body>
     <div class="container">
         <div class="print-buttons">
-            <button><i class="fa-solid fa-print"></i>
-                <p>พิมพ์รายงาน</p>
-            </button>
+            <div class="print-left">
+                <button><i class="fa-solid fa-print"></i>
+                    <p>พิมพ์รายงาน</p>
+                </button>
+            </div>
+            <div class="print-right">
+                <button id="downloadExcelBtn"><i class="fa-solid fa-file-excel"></i>
+                    <p>ดาวน์โหลด Excel</p>
+                </button>
+            </div>
         </div>
 
         <div class="search-container">
@@ -249,6 +257,8 @@ $sticker_styles = [
         </table>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
     <script>
     document.querySelector(".print-buttons button").addEventListener("click", function() {
         const startDate = document.getElementById("startDate").value || "ไม่ระบุ";
@@ -269,6 +279,28 @@ $sticker_styles = [
         setTimeout(() => {
             window.print();
         }, 100);
+    });
+
+    document.getElementById("downloadExcelBtn").addEventListener("click", function() {
+        const startDate = document.getElementById("startDate").value || "ไม่ระบุ";
+        const endDate = document.getElementById("endDate").value || "ไม่ระบุ";
+
+        // ดึงข้อมูลจากตาราง HTML
+        const table = document.querySelector("table");
+        const ws = XLSX.utils.table_to_sheet(table); // แปลงข้อมูลตารางเป็น Worksheet
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "รายงานสินค้าหมดอายุ");
+
+        // ตั้งชื่อไฟล์
+        let fileName;
+        if (startDate === "ไม่ระบุ" && endDate === "ไม่ระบุ") {
+            fileName = "รายงานสินค้าหมดอายุ.xlsx";
+        } else {
+            fileName = `รายงานสินค้าหมดอายุ${startDate}_ถึง_${endDate}.xlsx`;
+        }
+
+        // ดาวน์โหลดไฟล์ Excel
+        XLSX.writeFile(wb, fileName);
     });
 
     const allProducts = <?php echo json_encode($allProducts); ?>;
@@ -334,7 +366,8 @@ $sticker_styles = [
                 } else {
                     data.forEach(row => {
                         const stickerStyle = stickerStyles[row.sticker_color] || "";
-                        const stickerText = row.sticker_color ? row.sticker_color : 'ไม่มีวันหมดอายุ';
+                        const stickerText = row.sticker_color ? row.sticker_color :
+                            'ไม่มีวันหมดอายุ';
 
                         const newRow = `
                             <tr>

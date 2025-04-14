@@ -38,9 +38,8 @@ $sticker_styles = [
     'หมดอายุเดือน 9' => 'background-color: #FDC4EB; color: #000;',
     'หมดอายุเดือน 10' => 'background-color: #B9F4A2; color: #000;',
     'หมดอายุเดือน 11' => 'background-color: #CC99FF; color: #000;',
-    'หมดอายุเดือน 12' => 'background-color: #999999; color: #000; border: 1px solid #ccc;',
+    'หมดอายุเดือน 12' => 'background-color: #999999; color: #000;',
     'ไม่มีวันหมดอายุ' => 'background-color: #FFFFFF; color: #000;',
-    'ไม่ระบุข้อมูล'=> 'background-color: #999999; color: #fff;', 
 ];
 ?>
 
@@ -219,13 +218,8 @@ $sticker_styles = [
                 if ($result->num_rows > 0) {
                     while($row = $result->fetch_assoc()) {
                         $sticker_color = $row['sticker_color'];
-                        if (empty($sticker_color)) {
-                $sticker_color = "ไม่ระบุข้อมูล";
-                $sticker_style = "background-color: #999999; color: #fff;";
-            } else {
-                $sticker_style = isset($sticker_styles[$sticker_color]) ? $sticker_styles[$sticker_color] : "background-color: #999999; color: #fff;";
-            }
-
+                $sticker_text = $sticker_color ?: 'ไม่มีวันหมดอายุ';
+                $sticker_style = $sticker_styles[$sticker_color] ?? "background-color: #FFFFFF; color: #000;";
                 
                         echo "<tr data-product-code='" . $row['product_code'] . "'>";
                         echo "<td>" . $no++ . "</td>";
@@ -233,7 +227,7 @@ $sticker_styles = [
                         echo "<td>" . $row['product_name'] . "</td>";
                         echo "<td>" . $row['quantity'] . "</td>";
                         echo "<td>" . $row['unit'] . "</td>";
-                        echo "<td style='$sticker_style' disabled>" . (empty($row['sticker_color']) ? 'ไม่ระบุข้อมูล' : $row['sticker_color']) . "</td>";
+                        echo "<td style='$sticker_style'>$sticker_text</td>";
                         echo "<td>" . $row['expiration_date'] . "</td>";
                         echo "<td>" . $row['category'] . "</td>";
                         echo "</tr>";

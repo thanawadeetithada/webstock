@@ -300,8 +300,7 @@ if (!isset($_SESSION['user_id'])) {
                     </option>
                     <option value="หมดอายุเดือน 11" style="background-color: #CC99FF; color: #000;">หมดอายุเดือน 11
                     </option>
-                    <option value="หมดอายุเดือน 12"
-                        style="background-color: #999999; color: #000; border: 1px solid #000;">หมดอายุเดือน 12
+                    <option value="หมดอายุเดือน 12" style="background-color: #999999; color: #000;">หมดอายุเดือน 12
                     </option>
                     <option value="ไม่มีวันหมดอายุ" style="background-color: #FFFFFF; color: #000;">ไม่มีวันหมดอายุ
                     </option>
